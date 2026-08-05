@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "naat-collection",
-    "slug": "naat-collection",
+    "name": "NearBook",
+    "slug": "nearbook",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "naatcollection",
+    "scheme": "nearbook",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -38,6 +38,14 @@
           "dark": {
             "backgroundColor": "#000000"
           }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow NearBook to access your photos to list your book.",
+          "cameraPermission": "Allow NearBook to use your camera to take photos of your book.",
+          "microphonePermission": false
         }
       ]
     ],

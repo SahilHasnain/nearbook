@@ -38,6 +38,9 @@ yarn-error.*
 
 app-example
 
+# Playwright MCP page snapshots
+.playwright-mcp/
+
 # generated native folders
 /ios
 /android

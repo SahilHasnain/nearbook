@@ -1,0 +1,105 @@
+{
+  "databaseId": "nearbook",
+  "databaseName": "nearbook",
+  "platforms": [
+    { "type": "web", "name": "Web (dev)", "key": "http://localhost:8081" },
+    { "type": "android", "name": "Android", "key": "com.nearbook.app" },
+    { "type": "apple", "name": "iOS", "key": "com.nearbook.app" }
+  ],
+  "collections": [
+    {
+      "id": "listings",
+      "name": "Listings",
+      "attributes": [
+        { "type": "string", "key": "title", "required": true, "size": 200 },
+        { "type": "string", "key": "subject", "required": true, "size": 50 },
+        { "type": "string", "key": "publisher", "required": true, "size": 50 },
+        { "type": "string", "key": "edition", "required": false, "size": 50 },
+        { "type": "string", "key": "condition", "required": true, "size": 20 },
+        { "type": "integer", "key": "price", "required": true, "min": 0 },
+        { "type": "string", "key": "city", "required": true, "size": 100 },
+        { "type": "string", "key": "photos", "required": false, "array": true, "size": 100 },
+        { "type": "string", "key": "sellerId", "required": true, "size": 50 },
+        { "type": "string", "key": "sellerName", "required": true, "size": 128 },
+        { "type": "string", "key": "status", "required": true, "size": 20 },
+        { "type": "string", "key": "description", "required": false, "size": 2000 }
+      ],
+      "indexes": [
+        { "key": "status", "type": "key", "attributes": ["status"] },
+        { "key": "sellerId", "type": "key", "attributes": ["sellerId"] },
+        { "key": "subject", "type": "key", "attributes": ["subject"] },
+        { "key": "publisher", "type": "key", "attributes": ["publisher"] },
+        { "key": "condition", "type": "key", "attributes": ["condition"] },
+        { "key": "price", "type": "key", "attributes": ["price"] }
+      ]
+    },
+    {
+      "id": "conversations",
+      "name": "Conversations",
+      "attributes": [
+        { "type": "string", "key": "buyerId", "required": true, "size": 50 },
+        { "type": "string", "key": "sellerId", "required": true, "size": 50 },
+        { "type": "string", "key": "buyerName", "required": true, "size": 128 },
+        { "type": "string", "key": "sellerName", "required": true, "size": 128 },
+        { "type": "string", "key": "listingId", "required": true, "size": 50 },
+        { "type": "string", "key": "listingTitle", "required": true, "size": 200 },
+        { "type": "string", "key": "lastMessage", "required": false, "size": 2000 },
+        { "type": "datetime", "key": "lastMessageAt", "required": false }
+      ],
+      "indexes": [
+        { "key": "buyerId", "type": "key", "attributes": ["buyerId"] },
+        { "key": "sellerId", "type": "key", "attributes": ["sellerId"] },
+        {
+          "key": "participants",
+          "type": "unique",
+          "attributes": ["buyerId", "sellerId", "listingId"]
+        }
+      ]
+    },
+    {
+      "id": "messages",
+      "name": "Messages",
+      "attributes": [
+        { "type": "string", "key": "conversationId", "required": true, "size": 50 },
+        { "type": "string", "key": "senderId", "required": true, "size": 50 },
+        { "type": "string", "key": "text", "required": true, "size": 2000 }
+      ],
+      "indexes": [
+        { "key": "conversationId", "type": "key", "attributes": ["conversationId"] }
+      ]
+    },
+    {
+      "id": "saved_books",
+      "name": "Saved Books",
+      "attributes": [
+        { "type": "string", "key": "userId", "required": true, "size": 50 },
+        { "type": "string", "key": "listingId", "required": true, "size": 50 }
+      ],
+      "indexes": [
+        { "key": "userId", "type": "key", "attributes": ["userId"] },
+        {
+          "key": "user_listing",
+          "type": "key",
+          "attributes": ["userId", "listingId"]
+        }
+      ]
+    },
+    {
+      "id": "waitlist",
+      "name": "Waitlist",
+      "attributes": [
+        { "type": "string", "key": "email", "required": true, "size": 256, "format": "email" },
+        { "type": "string", "key": "source", "required": false, "size": 100 }
+      ],
+      "indexes": [
+        { "key": "email", "type": "unique", "attributes": ["email"] }
+      ]
+    }
+  ],
+  "bucket": {
+    "id": "book_photos",
+    "name": "Book Photos",
+    "maximumFileSize": 10485760,
+    "allowedFileExtensions": ["jpg", "jpeg", "png", "webp", "heic"]
+  }
+}
