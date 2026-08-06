@@ -1,10 +1,12 @@
 import type {
+  AppNotification,
   Condition,
   Conversation,
   Listing,
   ListingFilters,
   Message,
   NewListing,
+  NotificationType,
 } from "@/lib/types";
 
 // ---------- In-memory placeholder data (demo mode) ----------
@@ -219,7 +221,8 @@ export async function getListing(id: string): Promise<Listing> {
 }
 
 export async function uploadPhotos(
-  files: { uri: string; name: string; type: string; size: number }[]
+  files: { uri: string; name: string; type: string; size: number }[],
+  _ownerId: string
 ): Promise<string[]> {
   return files.map(() => `demo-upload-${++uploadCounter}`);
 }
@@ -273,13 +276,29 @@ export async function isSaved(
 
 export async function toggleSaved(
   userId: string,
-  listingId: string
+  listingId: string,
+  actorName?: string
 ): Promise<boolean> {
   if (demoSaved.has(listingId)) {
     demoSaved.delete(listingId);
     return false;
   }
   demoSaved.add(listingId);
+  if (actorName) {
+    const listing = demoListings.find((l) => l.$id === listingId);
+    if (listing && listing.sellerId !== userId) {
+      demoNotifications.unshift(
+        notification(`notif-${++uploadCounter}`, {
+          userId: listing.sellerId,
+          type: "save",
+          title: actorName,
+          body: `Saved your listing "${listing.title}"`,
+          listingId,
+          read: false,
+        })
+      );
+    }
+  }
   return true;
 }
 
@@ -354,6 +373,79 @@ export async function sendMessage(params: {
     conv.lastMessage = params.text;
     conv.lastMessageAt = msg.$createdAt;
     conv.$updatedAt = msg.$createdAt;
+    const senderName = conv.buyerId === params.senderId ? conv.buyerName : conv.sellerName;
+    demoNotifications.unshift(
+      notification(`notif-${++uploadCounter}`, {
+        userId: params.recipientId,
+        type: "message",
+        title: senderName ?? "New message",
+        body: params.text,
+        conversationId: conv.$id,
+        read: false,
+      })
+    );
   }
   return msg;
+}
+
+// ---------- Notifications ----------
+
+function notification(
+  id: string,
+  data: Omit<AppNotification, "$id" | "$createdAt" | "$updatedAt" | "$permissions" | "$collectionId" | "$databaseId" | "$sequence">
+): AppNotification {
+  return {
+    ...data,
+    $id: id,
+    $createdAt: iso(1000 * 60 * 60 * 1),
+    $updatedAt: iso(1000 * 60 * 60 * 1),
+    $permissions: [],
+    $collectionId: "notifications",
+    $databaseId: "demo",
+    $sequence: "0",
+  } as unknown as AppNotification;
+}
+
+const demoNotifications: AppNotification[] = [
+  notification("notif-demo-1", {
+    userId: "demo-user",
+    type: "contact",
+    title: "Rahul Kumar",
+    body: 'Messaged you about "MTG NCERT at Your Fingertips – Physics"',
+    listingId: "listing-1",
+    conversationId: "conv-1",
+    read: false,
+  }),
+];
+
+export async function createNotification(input: {
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  listingId?: string;
+  conversationId?: string;
+}): Promise<void> {
+  demoNotifications.unshift(
+    notification(`notif-${++uploadCounter}`, { ...input, read: false })
+  );
+}
+
+export async function listNotifications(userId: string): Promise<AppNotification[]> {
+  return demoNotifications.filter((n) => n.userId === userId);
+}
+
+export async function getUnreadNotificationCount(userId: string): Promise<number> {
+  return demoNotifications.filter((n) => n.userId === userId && !n.read).length;
+}
+
+export async function markNotificationRead(id: string): Promise<void> {
+  const found = demoNotifications.find((n) => n.$id === id);
+  if (found) found.read = true;
+}
+
+export async function markAllNotificationsRead(userId: string): Promise<void> {
+  for (const n of demoNotifications) {
+    if (n.userId === userId) n.read = true;
+  }
 }

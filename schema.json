@@ -85,6 +85,27 @@
       ]
     },
     {
+      "id": "notifications",
+      "name": "Notifications",
+      "attributes": [
+        { "type": "string", "key": "userId", "required": true, "size": 50 },
+        { "type": "string", "key": "type", "required": true, "size": 20 },
+        { "type": "string", "key": "title", "required": true, "size": 128 },
+        { "type": "string", "key": "body", "required": true, "size": 500 },
+        { "type": "string", "key": "listingId", "required": false, "size": 50 },
+        { "type": "string", "key": "conversationId", "required": false, "size": 50 },
+        { "type": "boolean", "key": "read", "required": false, "default": false }
+      ],
+      "indexes": [
+        { "key": "userId", "type": "key", "attributes": ["userId"] },
+        {
+          "key": "userRead",
+          "type": "key",
+          "attributes": ["userId", "read"]
+        }
+      ]
+    },
+    {
       "id": "waitlist",
       "name": "Waitlist",
       "attributes": [

@@ -1,7 +1,9 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
 
 export default function TabsLayout() {
+  const unread = useUnreadNotifications();
   return (
     <Tabs
       screenOptions={{
@@ -16,6 +18,20 @@ export default function TabsLayout() {
           title: "Home",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: "Activity",
+          tabBarBadge: unread > 0 ? unread : undefined,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons
+              name={unread > 0 ? "notifications" : "notifications-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />

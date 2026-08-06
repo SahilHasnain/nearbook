@@ -1,7 +1,9 @@
+import "./local-storage";
 import {
   Client,
   Account,
   Databases,
+  Functions,
   Storage,
   ID,
 } from "react-native-appwrite";
@@ -17,6 +19,11 @@ export const config = {
   platform:
     process.env.EXPO_PUBLIC_APPWRITE_PLATFORM || "com.nearbook.app",
   databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID || "",
+  createConversationFunctionId:
+    process.env.EXPO_PUBLIC_APPWRITE_CREATE_CONVERSATION_FUNCTION_ID ||
+    "create-conversation",
+  sendMessageFunctionId:
+    process.env.EXPO_PUBLIC_APPWRITE_SEND_MESSAGE_FUNCTION_ID || "send-message",
 };
 
 export const collections = {
@@ -27,6 +34,8 @@ export const collections = {
   messages: process.env.EXPO_PUBLIC_COLLECTION_MESSAGES || "messages",
   savedBooks:
     process.env.EXPO_PUBLIC_COLLECTION_SAVED_BOOKS || "saved_books",
+  notifications:
+    process.env.EXPO_PUBLIC_COLLECTION_NOTIFICATIONS || "notifications",
 };
 
 export const buckets = {
@@ -40,5 +49,6 @@ export const client = new Client()
 
 export const account = new Account(client);
 export const databases = new Databases(client);
+export const functions = new Functions(client);
 export const storage = new Storage(client);
 export { ID };

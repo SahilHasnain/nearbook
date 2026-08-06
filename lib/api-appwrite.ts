@@ -1,24 +1,27 @@
-import { Query } from "react-native-appwrite";
+import { ExecutionMethod, Query } from "react-native-appwrite";
 import {
   buckets,
+  account,
   collections,
   config,
   databases,
+  functions,
   ID,
   storage,
 } from "@/lib/appwrite";
 import type {
-  Condition,
+  AppNotification,
   Conversation,
   Listing,
   ListingFilters,
   Message,
   NewListing,
+  NotificationType,
   SavedBook,
 } from "@/lib/types";
 
 export function photoUrl(fileId: string): string {
-  return storage.getFilePreviewURL(buckets.bookPhotos, fileId).toString();
+  return storage.getFileViewURL(buckets.bookPhotos, fileId).toString();
 }
 
 export async function deletePhoto(fileId: string): Promise<void> {
@@ -42,15 +45,6 @@ function listingPermissions(ownerId: string): string[] {
     `read("user:${ownerId}")`,
     `update("user:${ownerId}")`,
     `delete("user:${ownerId}")`,
-  ];
-}
-
-function chatPermissions(buyerId: string, sellerId: string): string[] {
-  return [
-    `read("user:${buyerId}")`,
-    `read("user:${sellerId}")`,
-    `update("user:${buyerId}")`,
-    `update("user:${sellerId}")`,
   ];
 }
 
@@ -95,7 +89,8 @@ export async function getListing(id: string): Promise<Listing> {
 }
 
 export async function uploadPhotos(
-  uris: { uri: string; name: string; type: string; size: number }[]
+  uris: { uri: string; name: string; type: string; size: number }[],
+  ownerId: string
 ): Promise<string[]> {
   const ids: string[] = [];
   for (const file of uris) {
@@ -103,6 +98,12 @@ export async function uploadPhotos(
       bucketId: buckets.bookPhotos,
       fileId: ID.unique(),
       file: { uri: file.uri, name: file.name, type: file.type, size: file.size },
+      permissions: [
+        `read("any")`,
+        `read("user:${ownerId}")`,
+        `update("user:${ownerId}")`,
+        `delete("user:${ownerId}")`,
+      ],
     });
     ids.push(uploaded.$id);
   }
@@ -143,12 +144,35 @@ export async function setListingStatus(
   id: string,
   status: Listing["status"]
 ): Promise<Listing> {
-  return databases.updateDocument<Listing>({
+  const listing = await databases.updateDocument<Listing>({
     databaseId: config.databaseId,
     collectionId: collections.listings,
     documentId: id,
     data: { status },
   });
+
+  if (status === "sold") {
+    try {
+      const me = await account.get();
+      const conversations = await listConversations(me.$id);
+      const related = conversations.filter((c) => c.listingId === id);
+      for (const conversation of related) {
+        if (conversation.buyerId === me.$id) continue;
+        await createNotification({
+          userId: conversation.buyerId,
+          type: "sold",
+          title: "Listing sold",
+          body: `"${conversation.listingTitle}" is now sold`,
+          listingId: id,
+          conversationId: conversation.$id,
+        });
+      }
+    } catch (e) {
+      console.warn("[notifications] Sold notifications failed", e);
+    }
+  }
+
+  return listing;
 }
 
 // ---------- Saved books ----------
@@ -180,7 +204,8 @@ export async function isSaved(
 
 export async function toggleSaved(
   userId: string,
-  listingId: string
+  listingId: string,
+  actorName?: string
 ): Promise<boolean> {
   const saved = await isSaved(userId, listingId);
   if (saved) {
@@ -208,7 +233,113 @@ export async function toggleSaved(
     data: { userId, listingId },
     permissions: docPermissions(userId),
   });
+  if (actorName) {
+    try {
+      const listing = await getListing(listingId);
+      if (listing.sellerId !== userId) {
+        await createNotification({
+          userId: listing.sellerId,
+          type: "save",
+          title: actorName,
+          body: `Saved your listing "${listing.title}"`,
+          listingId,
+        });
+      }
+    } catch (e) {
+      console.warn("[notifications] Save notification failed", e);
+    }
+  }
   return true;
+}
+
+// ---------- Notifications ----------
+
+export async function createNotification(input: {
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  listingId?: string;
+  conversationId?: string;
+}): Promise<void> {
+  try {
+    const data: Record<string, unknown> = {
+      userId: input.userId,
+      type: input.type,
+      title: input.title,
+      body: input.body,
+      read: false,
+    };
+    if (input.listingId) data.listingId = input.listingId;
+    if (input.conversationId) data.conversationId = input.conversationId;
+    await databases.createDocument({
+      databaseId: config.databaseId,
+      collectionId: collections.notifications,
+      documentId: ID.unique(),
+      data,
+      permissions: [
+        `read("user:${input.userId}")`,
+        `update("user:${input.userId}")`,
+      ],
+    });
+  } catch (e) {
+    console.warn("[notifications] createNotification failed", e);
+  }
+}
+
+export async function listNotifications(userId: string): Promise<AppNotification[]> {
+  const res = await databases.listDocuments<AppNotification>({
+    databaseId: config.databaseId,
+    collectionId: collections.notifications,
+    queries: [
+      Query.equal("userId", [userId]),
+      Query.orderDesc("$createdAt"),
+      Query.limit(100),
+    ],
+  });
+  return res.documents;
+}
+
+export async function getUnreadNotificationCount(userId: string): Promise<number> {
+  const res = await databases.listDocuments<AppNotification>({
+    databaseId: config.databaseId,
+    collectionId: collections.notifications,
+    queries: [
+      Query.equal("userId", [userId]),
+      Query.equal("read", [false]),
+      Query.limit(1),
+    ],
+  });
+  return res.total ?? 0;
+}
+
+export async function markNotificationRead(id: string): Promise<void> {
+  await databases.updateDocument({
+    databaseId: config.databaseId,
+    collectionId: collections.notifications,
+    documentId: id,
+    data: { read: true },
+  });
+}
+
+export async function markAllNotificationsRead(userId: string): Promise<void> {
+  const res = await databases.listDocuments<AppNotification>({
+    databaseId: config.databaseId,
+    collectionId: collections.notifications,
+    queries: [
+      Query.equal("userId", [userId]),
+      Query.equal("read", [false]),
+      Query.limit(100),
+    ],
+  });
+  for (const doc of res.documents) {
+    await databases.updateDocument({
+      databaseId: config.databaseId,
+      collectionId: collections.notifications,
+      documentId: doc.$id,
+      data: { read: true },
+    });
+  }
 }
 
 // ---------- Chat ----------
@@ -221,32 +352,28 @@ export async function ensureConversation(params: {
   listingId: string;
   listingTitle: string;
 }): Promise<Conversation> {
-  const res = await databases.listDocuments<Conversation>({
-    databaseId: config.databaseId,
-    collectionId: collections.conversations,
-    queries: [
-      Query.equal("buyerId", [params.buyerId]),
-      Query.equal("sellerId", [params.sellerId]),
-      Query.equal("listingId", [params.listingId]),
-      Query.limit(1),
-    ],
-  });
-  if (res.documents.length > 0) return res.documents[0];
-
-  return databases.createDocument<Conversation>({
-    databaseId: config.databaseId,
-    collectionId: collections.conversations,
-    documentId: ID.unique(),
-    data: {
+  try {
+    const jwt = await account.createJWT();
+    const execution = await functions.createExecution({
+      functionId: config.createConversationFunctionId,
+      body: JSON.stringify({ ...params, jwt: jwt.jwt }),
+      async: false,
+      method: ExecutionMethod.POST,
+    });
+    const responseBody = execution.responseBody || "{}";
+    if (execution.responseStatusCode < 200 || execution.responseStatusCode >= 300) {
+      throw new Error(responseBody);
+    }
+    return JSON.parse(responseBody) as Conversation;
+  } catch (error) {
+    console.error("[appwrite chat] Conversation function failed", {
+      error,
       buyerId: params.buyerId,
-      buyerName: params.buyerName,
       sellerId: params.sellerId,
-      sellerName: params.sellerName,
       listingId: params.listingId,
-      listingTitle: params.listingTitle,
-    },
-    permissions: chatPermissions(params.buyerId, params.sellerId),
-  });
+    });
+    throw error;
+  }
 }
 
 export async function getConversation(id: string): Promise<Conversation> {
@@ -306,25 +433,16 @@ export async function sendMessage(params: {
   text: string;
   recipientId: string;
 }): Promise<Message> {
-  const message = await databases.createDocument<Message>({
-    databaseId: config.databaseId,
-    collectionId: collections.messages,
-    documentId: ID.unique(),
-    data: {
-      conversationId: params.conversationId,
-      senderId: params.senderId,
-      text: params.text,
-    },
-    permissions: chatPermissions(params.senderId, params.recipientId),
+  const jwt = await account.createJWT();
+  const execution = await functions.createExecution({
+    functionId: config.sendMessageFunctionId,
+    body: JSON.stringify({ ...params, jwt: jwt.jwt }),
+    async: false,
+    method: ExecutionMethod.POST,
   });
-  await databases.updateDocument<Conversation>({
-    databaseId: config.databaseId,
-    collectionId: collections.conversations,
-    documentId: params.conversationId,
-    data: {
-      lastMessage: params.text,
-      lastMessageAt: message.$createdAt,
-    },
-  });
-  return message;
+  const responseBody = execution.responseBody || "{}";
+  if (execution.responseStatusCode < 200 || execution.responseStatusCode >= 300) {
+    throw new Error(responseBody);
+  }
+  return JSON.parse(responseBody) as Message;
 }

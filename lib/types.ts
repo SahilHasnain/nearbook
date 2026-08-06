@@ -41,6 +41,18 @@ export interface SavedBook extends Models.Document {
   listingId: string;
 }
 
+export type NotificationType = "message" | "save" | "contact" | "sold";
+
+export interface AppNotification extends Models.Document {
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  listingId?: string;
+  conversationId?: string;
+  read: boolean;
+}
+
 export const SUBJECTS = ["Physics", "Chemistry", "Biology"] as const;
 
 export const PUBLISHERS = [

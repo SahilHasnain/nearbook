@@ -1,5 +1,4 @@
-import { Pressable, Text, View } from "react-native";
-import { Image } from "expo-image";
+import { Image, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { photoUrl } from "@/lib/api";
 import { formatPrice, type Listing } from "@/lib/types";
@@ -7,6 +6,7 @@ import { formatPrice, type Listing } from "@/lib/types";
 export function ListingCard({ listing }: { listing: Listing }) {
   const router = useRouter();
   const cover = listing.photos[0];
+  const coverUrl = cover ? photoUrl(cover) : undefined;
 
   return (
     <Pressable
@@ -15,10 +15,16 @@ export function ListingCard({ listing }: { listing: Listing }) {
     >
       {cover ? (
         <Image
-          source={{ uri: photoUrl(cover) }}
+          source={{ uri: coverUrl }}
           className="h-40 w-full bg-slate-100"
-          contentFit="cover"
-          transition={150}
+          resizeMode="cover"
+          onError={(event) =>
+            console.error("[listing image] Failed to load cover", {
+              fileId: cover,
+              url: coverUrl,
+              error: event.nativeEvent.error,
+            })
+          }
         />
       ) : (
         <View className="h-40 w-full items-center justify-center bg-indigo-50">

@@ -3,10 +3,11 @@ import { Keyboard, LayoutAnimation, Platform, View } from "react-native";
 
 interface KeyboardSpacerProps {
   topSpacing?: number;
+  initialHeight?: number;
 }
 
-export default function KeyboardSpacer({ topSpacing = 0 }: KeyboardSpacerProps) {
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+export default function KeyboardSpacer({ topSpacing = 0, initialHeight = 0 }: KeyboardSpacerProps) {
+  const [keyboardHeight, setKeyboardHeight] = useState(initialHeight);
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";

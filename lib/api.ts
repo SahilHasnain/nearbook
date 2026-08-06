@@ -20,5 +20,10 @@ export const getConversation = impl.getConversation;
 export const listConversations = impl.listConversations;
 export const listMessages = impl.listMessages;
 export const sendMessage = impl.sendMessage;
+export const createNotification = impl.createNotification;
+export const listNotifications = impl.listNotifications;
+export const getUnreadNotificationCount = impl.getUnreadNotificationCount;
+export const markNotificationRead = impl.markNotificationRead;
+export const markAllNotificationsRead = impl.markAllNotificationsRead;
 
 export type { ListingFilters, NewListing } from "@/lib/types";

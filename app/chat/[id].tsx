@@ -85,7 +85,10 @@ export default function ChatThreadScreen() {
         recipientId,
         text: body,
       });
-      setMessages((prev) => [...prev, message]);
+      setMessages((prev) => {
+        if (prev.some((item) => item.$id === message.$id)) return prev;
+        return [...prev, message];
+      });
       setText("");
     } catch (e) {
       Alert.alert("Error", e instanceof Error ? e.message : "Could not send message.");

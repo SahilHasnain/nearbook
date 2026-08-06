@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
+  Keyboard,
   Pressable,
   ScrollView,
   Text,
@@ -35,10 +36,42 @@ export default function SellScreen() {
   const [sellerCity, setSellerCity] = useState(city ?? "");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [bottomPad, setBottomPad] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+  const focusedFieldRef = useRef<"city" | "description" | null>(null);
+  const keyboardHeightRef = useRef(0);
 
   useEffect(() => {
     ImagePicker.requestMediaLibraryPermissionsAsync();
   }, []);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
+      keyboardHeightRef.current = e.endCoordinates.height;
+      if (focusedFieldRef.current) {
+        setBottomPad(e.endCoordinates.height);
+        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
+      }
+    });
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setBottomPad(0);
+      focusedFieldRef.current = null;
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  function focusBottomField(field: "city" | "description") {
+    focusedFieldRef.current = field;
+    if (keyboardHeightRef.current > 0) {
+      setBottomPad(keyboardHeightRef.current);
+    }
+    // Scroll after the keyboard has resized the viewport so the next field is reachable.
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 350);
+  }
 
   function addAssets(assets: ImagePicker.ImagePickerAsset[]) {
     setPhotos((prev) => [...prev, ...assets].slice(0, MAX_PHOTOS));
@@ -75,6 +108,21 @@ export default function SellScreen() {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   }
 
+  function resetForm() {
+    setPhotos([]);
+    setTitle("");
+    setSubject(SUBJECTS[0]);
+    setPublisher("");
+    setEdition("");
+    setCondition("good");
+    setPrice("");
+    setSellerCity(city ?? "");
+    setDescription("");
+    setBottomPad(0);
+    focusedFieldRef.current = null;
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }
+
   async function onSubmit() {
     if (!user) return;
     const priceNum = Number(price);
@@ -91,7 +139,8 @@ export default function SellScreen() {
           name: p.fileName ?? `photo-${Date.now()}.jpg`,
           type: p.mimeType ?? "image/jpeg",
           size: p.fileSize ?? 0,
-        }))
+        })),
+        user.$id
       );
       await createListing(
         {
@@ -107,6 +156,7 @@ export default function SellScreen() {
         },
         { $id: user.$id, name: user.name }
       );
+      resetForm();
       Alert.alert("Listed!", "Your book is now live.", [
         { text: "OK", onPress: () => router.replace("/") },
       ]);
@@ -134,8 +184,12 @@ export default function SellScreen() {
   return (
     <RequireAuth>
       <ScrollView
+        ref={scrollRef}
         className="flex-1 bg-white"
-        contentContainerClassName="gap-6 p-5 pb-10"
+        contentContainerClassName="gap-6 p-5"
+        contentContainerStyle={{ paddingBottom: 40 + bottomPad }}
+        keyboardShouldPersistTaps="always"
+        keyboardDismissMode="none"
       >
       <Text className="pt-10 text-2xl font-bold text-slate-900">Sell a book</Text>
 
@@ -251,6 +305,7 @@ export default function SellScreen() {
           onChangeText={setSellerCity}
           autoCapitalize="words"
           placeholder="e.g. Patna"
+          onFocus={() => focusBottomField("city")}
         />
 
         <View className="gap-1.5">
@@ -261,6 +316,7 @@ export default function SellScreen() {
             placeholder="Condition details, marks on pages, etc. (optional)"
             placeholderTextColor="#94a3b8"
             multiline
+            onFocus={() => focusBottomField("description")}
             className="min-h-[100px] rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900"
           />
         </View>

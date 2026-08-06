@@ -3,13 +3,13 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
+  Image,
   Pressable,
   ScrollView,
   Text,
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -79,7 +79,7 @@ export default function ListingDetailScreen() {
     const activeUser = await ensureUser();
     if (!activeUser || !listing) return;
     try {
-      setSaved(await toggleSaved(activeUser.$id, listing.$id));
+      setSaved(await toggleSaved(activeUser.$id, listing.$id, activeUser.name));
     } catch {
       Alert.alert("Error", "Could not update saved books.");
     }
@@ -99,8 +99,15 @@ export default function ListingDetailScreen() {
         listingTitle: listing.title,
       });
       router.push(`/chat/${conversation.$id}`);
-    } catch {
-      Alert.alert("Error", "Could not start a chat. Try again.");
+    } catch (error) {
+      console.error("[chat] Could not start conversation", {
+        error,
+        buyerId: activeUser.$id,
+        sellerId: listing.sellerId,
+        listingId: listing.$id,
+      });
+      const detail = error instanceof Error ? error.message : String(error);
+      Alert.alert("Error", `Could not start a chat.\n${detail}`);
     } finally {
       setStartingChat(false);
     }
@@ -138,7 +145,14 @@ export default function ListingDetailScreen() {
                 source={{ uri: photoUrl(photo) }}
                 className="h-72 bg-slate-100"
                 style={{ width: Dimensions.get("window").width }}
-                contentFit="cover"
+                resizeMode="cover"
+                onError={(event) =>
+                  console.error("[listing image] Failed to load detail image", {
+                    fileId: photo,
+                    url: photoUrl(photo),
+                    error: event.nativeEvent.error,
+                  })
+                }
               />
             ))}
           </ScrollView>
