@@ -1,9 +1,11 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
+import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 
 export default function TabsLayout() {
   const unread = useUnreadNotifications();
+  const unreadChats = useUnreadConversations();
   return (
     <Tabs
       screenOptions={{
@@ -48,6 +50,7 @@ export default function TabsLayout() {
         name="chat"
         options={{
           title: "Chat",
+          tabBarBadge: unreadChats > 0 ? unreadChats : undefined,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubbles-outline" size={size} color={color} />
           ),

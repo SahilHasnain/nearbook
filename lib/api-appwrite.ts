@@ -414,6 +414,39 @@ export async function listConversations(userId: string): Promise<Conversation[]>
   );
 }
 
+function isConversationUnread(conversation: Conversation, userId: string): boolean {
+  const lastMessageAt = conversation.lastMessageAt;
+  if (!lastMessageAt) return false;
+  const isBuyer = conversation.buyerId === userId;
+  const lastReadAt = isBuyer
+    ? conversation.buyerLastReadAt
+    : conversation.sellerLastReadAt;
+  return !lastReadAt || new Date(lastMessageAt).getTime() > new Date(lastReadAt).getTime();
+}
+
+export async function getUnreadConversationCount(userId: string): Promise<number> {
+  const conversations = await listConversations(userId);
+  return conversations.filter((c) => isConversationUnread(c, userId)).length;
+}
+
+export async function markConversationRead(
+  conversation: Conversation,
+  userId: string
+): Promise<void> {
+  const isBuyer = conversation.buyerId === userId;
+  const key = isBuyer ? "buyerLastReadAt" : "sellerLastReadAt";
+  try {
+    await databases.updateDocument({
+      databaseId: config.databaseId,
+      collectionId: collections.conversations,
+      documentId: conversation.$id,
+      data: { [key]: new Date().toISOString() },
+    });
+  } catch (e) {
+    console.warn("[chat] markConversationRead failed", e);
+  }
+}
+
 export async function listMessages(conversationId: string): Promise<Message[]> {
   const res = await databases.listDocuments<Message>({
     databaseId: config.databaseId,

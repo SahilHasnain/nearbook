@@ -4,7 +4,6 @@ const apiKey = process.env.APPWRITE_FUNCTION_API_KEY;
 const databaseId = "nearbook";
 const messagesCollectionId = "messages";
 const conversationsCollectionId = "conversations";
-const notificationsCollectionId = "notifications";
 
 function json(res, body, status = 200) {
   return res.json(body, status);
@@ -79,46 +78,6 @@ export default async ({ req, res, error }) => {
     });
     if (!conversationResponse.ok) {
       error(`[chat] Conversation update failed: ${await conversationResponse.text()}`);
-    }
-
-    try {
-      const conversationFetch = await fetch(conversationUrl, { headers });
-      if (conversationFetch.ok) {
-        const conversation = await conversationFetch.json();
-        const senderName =
-          conversation.buyerId === body.senderId
-            ? conversation.buyerName
-            : conversation.sellerName;
-        const notificationData = {
-          userId: body.recipientId,
-          type: "message",
-          title: senderName ?? "New message",
-          body: body.text.trim().slice(0, 500),
-          conversationId: body.conversationId,
-          read: false,
-        };
-        if (conversation.listingId) notificationData.listingId = conversation.listingId;
-        const notificationResponse = await fetch(
-          `${endpoint}/databases/${databaseId}/collections/${notificationsCollectionId}/documents`,
-          {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-              documentId: "unique()",
-              data: notificationData,
-              permissions: [
-                `read("user:${body.recipientId}")`,
-                `update("user:${body.recipientId}")`,
-              ],
-            }),
-          }
-        );
-        if (!notificationResponse.ok) {
-          error(`[chat] Notification failed: ${await notificationResponse.text()}`);
-        }
-      }
-    } catch (notifErr) {
-      error(`[chat] Notification error: ${notifErr.message}`);
     }
 
     return json(res, message);

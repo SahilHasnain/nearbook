@@ -388,6 +388,27 @@ export async function sendMessage(params: {
   return msg;
 }
 
+export async function getUnreadConversationCount(userId: string): Promise<number> {
+  return demoConversations.filter((c) => isConvUnread(c, userId)).length;
+}
+
+export async function markConversationRead(
+  conversation: Conversation,
+  userId: string
+): Promise<void> {
+  const conv = demoConversations.find((c) => c.$id === conversation.$id);
+  if (!conv) return;
+  if (conv.buyerId === userId) conv.buyerLastReadAt = new Date().toISOString();
+  else conv.sellerLastReadAt = new Date().toISOString();
+}
+
+function isConvUnread(c: Conversation, userId: string): boolean {
+  if (!c.lastMessageAt) return false;
+  const isBuyer = c.buyerId === userId;
+  const lastReadAt = isBuyer ? c.buyerLastReadAt : c.sellerLastReadAt;
+  return !lastReadAt || new Date(c.lastMessageAt).getTime() > new Date(lastReadAt).getTime();
+}
+
 // ---------- Notifications ----------
 
 function notification(

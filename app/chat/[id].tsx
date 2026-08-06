@@ -12,10 +12,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { client, collections, config, isDemo } from "@/lib/appwrite";
-import { getConversation, listMessages, sendMessage } from "@/lib/api";
+import { getConversation, listMessages, markConversationRead, sendMessage } from "@/lib/api";
 import { useAuth } from "@/context/auth";
 import { ErrorState } from "@/components/ui/Spinner";
 import KeyboardSpacer from "@/components/KeyboardSpacer";
+import { refreshUnreadChats } from "@/lib/chat-center";
 import type { Conversation, Message } from "@/lib/types";
 
 export default function ChatThreadScreen() {
@@ -53,6 +54,12 @@ export default function ChatThreadScreen() {
   }, [id]);
 
   useEffect(() => {
+    if (!conversation || !user) return;
+    markConversationRead(conversation, user.$id);
+    refreshUnreadChats(user.$id);
+  }, [conversation, user]);
+
+  useEffect(() => {
     if (!id || isDemo) return;
     const channel = `databases.${config.databaseId}.collections.${collections.messages}.documents`;
     const unsubscribe = client.subscribe(channel, (response) => {
@@ -62,9 +69,13 @@ export default function ChatThreadScreen() {
         if (prev.some((m) => m.$id === payload.$id)) return prev;
         return [...prev, payload];
       });
+      if (payload.senderId !== user?.$id && conversation) {
+        if (user) markConversationRead(conversation, user.$id);
+        refreshUnreadChats(user?.$id ?? "");
+      }
     });
     return () => unsubscribe();
-  }, [id]);
+  }, [id, user, conversation]);
 
   useEffect(() => {
     listRef.current?.scrollToEnd({ animated: true });

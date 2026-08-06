@@ -28,6 +28,8 @@ export interface Conversation extends Models.Document {
   listingTitle: string;
   lastMessage?: string;
   lastMessageAt?: string;
+  buyerLastReadAt?: string;
+  sellerLastReadAt?: string;
 }
 
 export interface Message extends Models.Document {

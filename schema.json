@@ -44,7 +44,9 @@
         { "type": "string", "key": "listingId", "required": true, "size": 50 },
         { "type": "string", "key": "listingTitle", "required": true, "size": 200 },
         { "type": "string", "key": "lastMessage", "required": false, "size": 2000 },
-        { "type": "datetime", "key": "lastMessageAt", "required": false }
+        { "type": "datetime", "key": "lastMessageAt", "required": false },
+        { "type": "datetime", "key": "buyerLastReadAt", "required": false },
+        { "type": "datetime", "key": "sellerLastReadAt", "required": false }
       ],
       "indexes": [
         { "key": "buyerId", "type": "key", "attributes": ["buyerId"] },

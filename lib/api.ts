@@ -25,5 +25,7 @@ export const listNotifications = impl.listNotifications;
 export const getUnreadNotificationCount = impl.getUnreadNotificationCount;
 export const markNotificationRead = impl.markNotificationRead;
 export const markAllNotificationsRead = impl.markAllNotificationsRead;
+export const getUnreadConversationCount = impl.getUnreadConversationCount;
+export const markConversationRead = impl.markConversationRead;
 
 export type { ListingFilters, NewListing } from "@/lib/types";
