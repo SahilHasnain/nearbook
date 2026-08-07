@@ -16,6 +16,7 @@ function RootNavigator() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="listing/[id]" />
+      <Stack.Screen name="saved" options={{ headerShown: true, title: "Saved books" }} />
       <Stack.Protected guard={!!user}>
         <Stack.Screen name="chat/[id]" />
       </Stack.Protected>

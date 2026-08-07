@@ -14,10 +14,10 @@ export const isDemo = process.env.EXPO_PUBLIC_DATA_MODE === "demo";
 export const config = {
   endpoint:
     process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT ||
-    "https://cloud.appwrite.io/v1",
+    "http://35.200.174.46/v1",
   projectId: process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID || "",
   platform:
-    process.env.EXPO_PUBLIC_APPWRITE_PLATFORM || "com.nearbook.app",
+    process.env.EXPO_PUBLIC_APPWRITE_PLATFORM || "com.nearbook",
   databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID || "",
   createConversationFunctionId:
     process.env.EXPO_PUBLIC_APPWRITE_CREATE_CONVERSATION_FUNCTION_ID ||

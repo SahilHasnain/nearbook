@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { listMyListings, setListingStatus } from "@/lib/api";
 import { useAuth } from "@/context/auth";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -113,6 +114,19 @@ export default function ProfileScreen() {
           disabled={!draft.trim() || draft.trim() === city}
         />
       </View>
+
+      <Pressable
+        onPress={() => router.push("/saved")}
+        className="flex-row items-center justify-between rounded-2xl border border-slate-100 p-4 active:bg-slate-50"
+      >
+        <View className="flex-row items-center gap-3">
+          <View className="h-10 w-10 items-center justify-center rounded-full bg-indigo-50">
+            <Ionicons name="bookmark" size={18} color="#4f46e5" />
+          </View>
+          <Text className="font-semibold text-slate-900">Saved books</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+      </Pressable>
 
       <View className="gap-3">
         <Text className="text-lg font-semibold text-slate-900">My listings</Text>

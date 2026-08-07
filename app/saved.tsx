@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { FlatList, Text, View } from "react-native";
+import { FlatList, View } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { getListing, listSavedListingIds } from "@/lib/api";
 import { useAuth } from "@/context/auth";
@@ -49,11 +49,6 @@ export default function SavedScreen() {
             data={listings}
             keyExtractor={(item) => item.$id}
             contentContainerClassName="gap-4 px-5 pb-8"
-            ListHeaderComponent={
-              <Text className="pb-3 pt-16 text-2xl font-bold text-slate-900">
-                Saved books
-              </Text>
-            }
             renderItem={({ item }) => <ListingCard listing={item} />}
             ListEmptyComponent={
               <EmptyState icon="🔖" message="Save books here to find them later." />
