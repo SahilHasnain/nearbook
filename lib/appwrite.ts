@@ -1,12 +1,12 @@
-import "./local-storage";
 import {
-  Client,
   Account,
+  Client,
   Databases,
   Functions,
-  Storage,
   ID,
+  Storage,
 } from "react-native-appwrite";
+import "./local-storage";
 
 // demo | appwrite. See .env.example.
 export const isDemo = process.env.EXPO_PUBLIC_DATA_MODE === "demo";
@@ -14,10 +14,9 @@ export const isDemo = process.env.EXPO_PUBLIC_DATA_MODE === "demo";
 export const config = {
   endpoint:
     process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT ||
-    "http://35.200.174.46/v1",
+    "https://api.bloomoralabs.org/v1",
   projectId: process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID || "",
-  platform:
-    process.env.EXPO_PUBLIC_APPWRITE_PLATFORM || "com.nearbook",
+  platform: process.env.EXPO_PUBLIC_APPWRITE_PLATFORM || "com.nearbook",
   databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID || "",
   createConversationFunctionId:
     process.env.EXPO_PUBLIC_APPWRITE_CREATE_CONVERSATION_FUNCTION_ID ||
@@ -27,13 +26,11 @@ export const config = {
 };
 
 export const collections = {
-  listings:
-    process.env.EXPO_PUBLIC_COLLECTION_LISTINGS || "listings",
+  listings: process.env.EXPO_PUBLIC_COLLECTION_LISTINGS || "listings",
   conversations:
     process.env.EXPO_PUBLIC_COLLECTION_CONVERSATIONS || "conversations",
   messages: process.env.EXPO_PUBLIC_COLLECTION_MESSAGES || "messages",
-  savedBooks:
-    process.env.EXPO_PUBLIC_COLLECTION_SAVED_BOOKS || "saved_books",
+  savedBooks: process.env.EXPO_PUBLIC_COLLECTION_SAVED_BOOKS || "saved_books",
   notifications:
     process.env.EXPO_PUBLIC_COLLECTION_NOTIFICATIONS || "notifications",
 };
