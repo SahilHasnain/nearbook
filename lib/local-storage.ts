@@ -25,7 +25,6 @@ function createInMemoryStorage(): Storage {
 export function installLocalStorage(): void {
   const storage = createInMemoryStorage();
   const globals: unknown[] = [globalThis];
-  if (typeof global !== "undefined") globals.push(global);
   if (typeof window !== "undefined") globals.push(window);
 
   for (const target of globals) {

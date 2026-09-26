@@ -30,7 +30,7 @@ export default function RootLayout() {
       <AuthGateProvider>
         <RootNavigator />
       </AuthGateProvider>
-      <StatusBar style="auto" translucent backgroundColor="transparent" />
+      <StatusBar style="auto" />
     </AuthProvider>
   );
 }
