@@ -248,9 +248,8 @@ async function main() {
 
   // 4. Platforms are added in Console > Project Settings > Platforms
   //    (this endpoint is not exposed to API keys). Remember to add:
-  //      - Web app:  http://localhost:8081
-  //      - Android:  com.nearbook.app
-  //      - Apple:    com.nearbook.app
+  //    - Web app:  localhost
+  //    - Android:  com.nearbook
 
   // 5. Ensure email/password auth is enabled
   try {

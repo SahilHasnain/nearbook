@@ -14,8 +14,9 @@ export const isDemo = process.env.EXPO_PUBLIC_DATA_MODE === "demo";
 export const config = {
   endpoint:
     process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT ||
-    "https://api.bloomoralabs.org/v1",
-  projectId: process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID || "",
+    "https://sgp.cloud.appwrite.io/v1",
+  projectId:
+    process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID || "69a534420031c03a6505",
   platform: process.env.EXPO_PUBLIC_APPWRITE_PLATFORM || "com.nearbook",
   databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID || "",
   createConversationFunctionId:

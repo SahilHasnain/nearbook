@@ -2,9 +2,8 @@
   "databaseId": "nearbook",
   "databaseName": "nearbook",
   "platforms": [
-    { "type": "web", "name": "Web (dev)", "key": "http://localhost:8081" },
-    { "type": "android", "name": "Android", "key": "com.nearbook.app" },
-    { "type": "apple", "name": "iOS", "key": "com.nearbook.app" }
+    { "type": "web", "name": "Web (dev)", "key": "localhost" },
+    { "type": "android", "name": "NearBook Android", "key": "com.nearbook" }
   ],
   "collections": [
     {

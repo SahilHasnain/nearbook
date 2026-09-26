@@ -34,7 +34,7 @@ The API layer is a facade (`lib/api.ts`) that picks the demo or appwrite impleme
 - Attributes + indexes created ✔ (script polls until attributes are "available" before adding indexes)
 - Bucket `book_photos` ✔ (perms: `create("users")`, `read("any")`, `update("users")`, `delete("users")`, fileSecurity: false, 10MB, jpg/jpeg/png/webp/heic)
 - Email/password auth enabled ✔
-- Platforms NOT scriptable via API key — add manually in Console > Project Settings > Platforms: Web `http://localhost:8081`, Android `com.nearbook.app`, Apple `com.nearbook.app`
+- Platforms NOT scriptable via API key — add in Console > Project Settings > Platforms: Web `localhost`, Android `com.nearbook`
 - Re-run anytime: `node scripts/setup-appwrite.mjs` (idempotent)
 
 **Document permissions:** client `createDocument` calls pass explicit permissions — listings/saved_books owned by the user; conversations/messages readable+updatable by both participants.
