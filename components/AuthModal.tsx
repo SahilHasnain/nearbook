@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import {
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   Text,
   View,
 } from "react-native";
 import { useAuth, type Profile } from "@/context/auth";
 import { Button } from "@/components/ui/Button";
+import KeyboardSpacer from "@/components/KeyboardSpacer";
 import { TextField } from "@/components/ui/TextField";
 
 interface AuthModalProps {
@@ -114,10 +113,7 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
       visible={visible}
       onRequestClose={onClose}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1 justify-end"
-      >
+      <View className="flex-1 justify-end">
         <Pressable className="absolute inset-0 bg-black/40" onPress={onClose} />
 
         <View className="gap-5 rounded-t-3xl bg-white p-6 pb-10">
@@ -226,8 +222,9 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
               (step === "name" && !name.trim())
             }
           />
+          <KeyboardSpacer />
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }

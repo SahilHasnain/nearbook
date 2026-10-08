@@ -7,6 +7,7 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { listListings, type ListingFilters } from "@/lib/api";
@@ -27,6 +28,7 @@ const CONDITION_LABELS: Record<Condition, string> = {
 
 export default function HomeScreen() {
   const { city } = useAuth();
+  const { width } = useWindowDimensions();
   const [listings, setListings] = useState<Awaited<ReturnType<typeof listListings>>>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -36,6 +38,7 @@ export default function HomeScreen() {
   const [subject, setSubject] = useState<Subject>("All");
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState<ListingFilters>({});
+  const cardWidth = Math.max(0, (width - 40 - 12) / 2);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 400);
@@ -145,9 +148,15 @@ export default function HomeScreen() {
       ) : (
         <FlatList
           data={listings}
+          numColumns={2}
           keyExtractor={(item) => item.$id}
-          renderItem={({ item }) => <ListingCard listing={item} />}
+          renderItem={({ item }) => (
+            <View style={{ width: cardWidth }}>
+              <ListingCard listing={item} />
+            </View>
+          )}
           contentContainerClassName="gap-4 px-5 pb-8"
+          columnWrapperStyle={{ gap: 12 }}
           showsVerticalScrollIndicator={false}
           refreshing={refreshing}
           onRefresh={load}

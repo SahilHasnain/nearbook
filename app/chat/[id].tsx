@@ -142,6 +142,7 @@ export default function ChatThreadScreen() {
       <FlatList
         ref={listRef}
         data={messages}
+        className="flex-1"
         keyExtractor={(item) => item.$id}
         contentContainerClassName="gap-2 p-4"
         renderItem={({ item }) => {
@@ -171,26 +172,28 @@ export default function ChatThreadScreen() {
       />
 
       <View
-        className="flex-row items-center gap-2 border-t border-slate-100 px-4 py-3"
+        className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-white px-4 pt-3"
         style={{ paddingBottom: 12 + insets.bottom }}
       >
-        <TextInput
-          value={text}
-          onChangeText={setText}
-          placeholder="Message…"
-          placeholderTextColor="#94a3b8"
-          multiline
-          className="max-h-24 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-base text-slate-900"
-        />
-        <Pressable
-          onPress={onSend}
-          disabled={!text.trim() || sending}
-          className="h-11 w-11 items-center justify-center rounded-full bg-indigo-600 active:bg-indigo-700 disabled:opacity-50"
-        >
-          <Ionicons name="send" size={18} color="#fff" />
-        </Pressable>
+        <View className="flex-row items-center gap-2">
+          <TextInput
+            value={text}
+            onChangeText={setText}
+            placeholder="Message…"
+            placeholderTextColor="#94a3b8"
+            multiline
+            className="max-h-24 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-base text-slate-900"
+          />
+          <Pressable
+            onPress={onSend}
+            disabled={!text.trim() || sending}
+            className="h-11 w-11 items-center justify-center rounded-full bg-indigo-600 active:bg-indigo-700 disabled:opacity-50"
+          >
+            <Ionicons name="send" size={18} color="#fff" />
+          </Pressable>
+        </View>
+        <KeyboardSpacer />
       </View>
-      <KeyboardSpacer />
     </View>
   );
 }

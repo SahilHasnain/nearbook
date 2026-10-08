@@ -10,6 +10,7 @@ import {
   type ImageSourcePropType,
 } from "react-native";
 import { Image } from "expo-image";
+import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -133,13 +134,23 @@ export default function SellScreen() {
     setSubmitting(true);
     let photoIds: string[] = [];
     try {
+      const files = await Promise.all(
+        photos.map(async (photo, index) => {
+          const size = photo.fileSize ?? new File(photo.uri).info().size;
+          if (!size || size <= 0) {
+            throw new Error(`Could not read the selected image ${index + 1}.`);
+          }
+
+          return {
+            uri: photo.uri,
+            name: photo.fileName ?? `photo-${Date.now()}-${index}.jpg`,
+            type: photo.mimeType ?? "image/jpeg",
+            size,
+          };
+        })
+      );
       photoIds = await uploadPhotos(
-        photos.map((p) => ({
-          uri: p.uri,
-          name: p.fileName ?? `photo-${Date.now()}.jpg`,
-          type: p.mimeType ?? "image/jpeg",
-          size: p.fileSize ?? 0,
-        })),
+        files,
         user.$id
       );
       await createListing(
@@ -160,7 +171,8 @@ export default function SellScreen() {
       Alert.alert("Listed!", "Your book is now live.", [
         { text: "OK", onPress: () => router.replace("/") },
       ]);
-    } catch {
+    } catch (error) {
+      console.error("[sell] Could not publish listing", error);
       for (const id of photoIds) {
         try {
           await deletePhoto(id);

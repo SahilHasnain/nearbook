@@ -56,9 +56,31 @@ export default function ProfileScreen() {
   }
 
   async function onToggleStatus(listing: Listing) {
+    const next = listing.status === "active" ? "sold" : "active";
+    if (next === "sold") {
+      Alert.alert(
+        "Mark book as sold?",
+        "This will remove the listing from the active marketplace.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Mark sold",
+            style: "destructive",
+            onPress: () => {
+              void updateListingStatus(listing, next);
+            },
+          },
+        ]
+      );
+      return;
+    }
+
+    await updateListingStatus(listing, next);
+  }
+
+  async function updateListingStatus(listing: Listing, next: Listing["status"]) {
     setUpdatingId(listing.$id);
     try {
-      const next = listing.status === "active" ? "sold" : "active";
       await setListingStatus(listing.$id, next);
       setListings((prev) =>
         prev.map((l) => (l.$id === listing.$id ? { ...l, status: next } : l))

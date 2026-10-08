@@ -87,6 +87,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const requestEmailToken = useCallback(async (email: string): Promise<string> => {
     if (isDemo) return "demo-user-id";
+
+    // Appwrite rejects a new passwordless login while the old current session
+    // is still active. Clear it so the modal also works for relogin flows.
+    try {
+      await account.deleteSession({ sessionId: "current" });
+    } catch {
+      // No active session is fine.
+    }
+    setUser(null);
+
     const userId = emailToUserId(email);
     await account.createEmailToken({
       userId,
