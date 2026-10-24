@@ -63,8 +63,10 @@ export async function listListings(
     queries.push(Query.equal("publisher", [filters.publisher]));
   if (filters.condition)
     queries.push(Query.equal("condition", [filters.condition]));
-  if (filters.maxPrice != null && filters.maxPrice > 0)
+  if (filters.maxPrice != null && filters.maxPrice > 0) {
+    if (filters.currencyCode) queries.push(Query.equal("currencyCode", [filters.currencyCode]));
     queries.push(Query.lessThanEqual("price", filters.maxPrice));
+  }
 
   const res = await databases.listDocuments<Listing>({
     databaseId: config.databaseId,

@@ -19,6 +19,7 @@ import { useAuth } from "@/context/auth";
 import { requestApproximateCity } from "@/lib/location";
 import { distanceToListing } from "@/lib/distance";
 import { colors } from "@/lib/theme";
+import { getDeviceRegion } from "@/lib/regional-settings";
 
 type Subject = (typeof SUBJECTS)[number] | "All";
 
@@ -42,6 +43,7 @@ export default function HomeScreen() {
   const [subject, setSubject] = useState<Subject>("All");
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState<ListingFilters>({});
+  const deviceCurrency = getDeviceRegion().currencyCode;
   const [locating, setLocating] = useState(false);
   const cardWidth = Math.max(0, (width - 40 - 12) / 2);
 
@@ -70,6 +72,7 @@ export default function HomeScreen() {
     try {
       const data = await listListings({
         ...filters,
+        currencyCode: filters.maxPrice != null ? deviceCurrency : undefined,
         subject: subject === "All" ? undefined : subject,
         search: debouncedSearch || undefined,
       });
@@ -104,7 +107,7 @@ export default function HomeScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [filters, debouncedSearch, city, coordinates, subject]);
+  }, [filters, debouncedSearch, city, coordinates, subject, deviceCurrency]);
 
   useFocusEffect(
     useCallback(() => {
@@ -216,6 +219,7 @@ export default function HomeScreen() {
         visible={filterOpen}
         onClose={() => setFilterOpen(false)}
         filters={filters}
+        currencyCode={deviceCurrency}
         onChange={setFilters}
       />
     </View>
@@ -226,11 +230,13 @@ function FilterModal({
   visible,
   onClose,
   filters,
+  currencyCode,
   onChange,
 }: {
   visible: boolean;
   onClose: () => void;
   filters: ListingFilters;
+  currencyCode: string;
   onChange: (f: ListingFilters) => void;
 }) {
   const [publisher, setPublisher] = useState(filters.publisher ?? "");
@@ -286,7 +292,7 @@ function FilterModal({
           </ScrollView>
 
           <Text className="mb-2 text-sm font-medium text-slate-700">
-            Max price
+            Max price ({currencyCode})
           </Text>
           <TextInput
             value={maxPrice}

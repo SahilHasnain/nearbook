@@ -25,5 +25,5 @@ module.exports = {
       ];
     }
     return plugin;
-  }),
+  }).concat("expo-localization"),
 };

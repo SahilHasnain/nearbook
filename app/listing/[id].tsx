@@ -189,7 +189,7 @@ export default function ListingDetailScreen() {
 
           <View className="flex-row items-center justify-between">
             <Text className="text-3xl font-bold text-slate-900">
-              {formatPrice(listing.price)}
+              {formatPrice(listing.price, listing.currencyCode)}
             </Text>
             <View className="rounded-full bg-amber-50 px-3 py-1">
               <Text className="text-xs font-semibold text-slate-800">

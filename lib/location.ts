@@ -30,6 +30,7 @@ export async function requestApproximateCity(): Promise<DetectedLocation> {
     address?.city,
     address?.subregion,
     address?.region,
+    address?.country,
     address?.postalCode,
   ].filter((part): part is string => Boolean(part?.trim()));
   const uniqueParts = locationParts.filter(

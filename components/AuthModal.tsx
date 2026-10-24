@@ -4,6 +4,7 @@ import {
   Pressable,
   Text,
   View,
+  Platform,
 } from "react-native";
 import { useAuth, type Profile } from "@/context/auth";
 import { Button } from "@/components/ui/Button";
@@ -19,7 +20,7 @@ interface AuthModalProps {
 type Step = "email" | "otp" | "name";
 
 export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
-  const { requestEmailToken, verifyEmailToken, completeProfile } = useAuth();
+  const { requestEmailToken, verifyEmailToken, completeProfile, signInWithGoogle } = useAuth();
 
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
@@ -98,6 +99,24 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
     }
   }
 
+  async function continueWithGoogle() {
+    setLoading(true);
+    setError(null);
+    try {
+      const profile = await signInWithGoogle();
+      if (!profile.name?.trim()) {
+        setName("");
+        setStep("name");
+      } else {
+        onSuccess(profile);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't complete Google sign-in.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const titles: Record<Step, string> = {
     email: "Sign in to continue",
     otp: "Check your inbox",
@@ -141,6 +160,24 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
             <Text className="text-sm leading-5 text-slate-500">
               {"Sellers will see your name when you message them."}
             </Text>
+          )}
+
+          {step === "email" && (
+            <>
+              {Platform.OS !== "web" ? (
+                <Button
+                  title="Continue with Google"
+                  variant="secondary"
+                  onPress={continueWithGoogle}
+                  loading={loading}
+                  disabled={loading}
+                />
+              ) : null}
+              {error ? <Text className="text-sm text-red-600">{error}</Text> : null}
+              {Platform.OS !== "web" ? (
+                <Text className="text-center text-xs text-slate-400">or continue with email</Text>
+              ) : null}
+            </>
           )}
 
           {step === "email" && (

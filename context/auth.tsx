@@ -7,9 +7,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { account, isDemo } from "@/lib/appwrite";
+import { account, config, IdTokenProvider, isDemo } from "@/lib/appwrite";
 import { getDemoUser } from "@/lib/demo-user";
 import type { Models } from "react-native-appwrite";
+import { GoogleSignin, isSuccessResponse } from "@react-native-google-signin/google-signin";
+import { Platform } from "react-native";
 
 export type Profile = Models.User<{
   city?: string;
@@ -45,6 +47,7 @@ interface AuthContextValue {
   requestEmailToken: (email: string) => Promise<string>;
   verifyEmailToken: (userId: string, secret: string) => Promise<Profile>;
   completeProfile: (name: string) => Promise<Profile>;
+  signInWithGoogle: () => Promise<Profile>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -133,6 +136,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const signInWithGoogle = useCallback(async (): Promise<Profile> => {
+    if (Platform.OS === "web") {
+      throw new Error("Google native sign-in is available in the installed iOS and Android app.");
+    }
+    if (isDemo) throw new Error("Google sign-in is unavailable in demo mode.");
+
+    GoogleSignin.configure({ webClientId: config.googleWebClientId });
+    await GoogleSignin.hasPlayServices();
+    try {
+      await GoogleSignin.signOut();
+    } catch {
+      // No cached Google session is normal for a first-time sign-in.
+    }
+    const result = await GoogleSignin.signIn();
+    if (!isSuccessResponse(result) || !result.data.idToken) {
+      throw new Error("Google did not return an ID token. Please try again.");
+    }
+
+    try {
+      await account.deleteSession({ sessionId: "current" });
+    } catch {
+      // There may not be an existing Appwrite session.
+    }
+    await account.createIdTokenSession({
+      provider: IdTokenProvider.Google,
+      idToken: result.data.idToken,
+    });
+    const profile = (await account.get()) as Profile;
+    setUser(profile);
+    return profile;
+  }, []);
+
   const completeProfile = useCallback(
     async (name: string): Promise<Profile> => {
       const cleanName = name.trim();
@@ -172,6 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       requestEmailToken,
       verifyEmailToken,
       completeProfile,
+      signInWithGoogle,
     }),
     [
       user,
@@ -184,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       requestEmailToken,
       verifyEmailToken,
       completeProfile,
+      signInWithGoogle,
     ]
   );
 

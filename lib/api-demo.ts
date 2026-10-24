@@ -219,8 +219,12 @@ export async function listListings(
   if (filters.subject) out = out.filter((l) => l.subject === filters.subject);
   if (filters.publisher) out = out.filter((l) => l.publisher === filters.publisher);
   if (filters.condition) out = out.filter((l) => l.condition === filters.condition);
-  if (filters.maxPrice != null && filters.maxPrice > 0)
+  if (filters.maxPrice != null && filters.maxPrice > 0) {
+    if (filters.currencyCode) {
+      out = out.filter((l) => (l.currencyCode ?? "INR") === filters.currencyCode);
+    }
     out = out.filter((l) => l.price <= filters.maxPrice!);
+  }
   const q = filters.search?.trim().toLowerCase();
   if (q) out = out.filter((l) => l.title.toLowerCase().includes(q));
   return out.sort((a, b) => b.$createdAt.localeCompare(a.$createdAt));

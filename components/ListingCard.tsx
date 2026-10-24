@@ -48,13 +48,13 @@ export function ListingCard({ listing }: { listing: Listing }) {
             </>
           ) : null}
         </View>
-        <View className="flex-row items-center justify-between">
-          <Text className="text-lg font-bold text-slate-900">
-            {formatPrice(listing.price)}
+        <View className="flex-row items-center justify-between gap-2 pt-1">
+          <Text className="flex-1 text-lg font-bold text-slate-900" numberOfLines={1}>
+            {formatPrice(listing.price, listing.currencyCode)}
           </Text>
-          <View className="flex-row items-center gap-1">
-            <Text className="text-xs text-slate-400">📍</Text>
-            <Text className="max-w-[85px] text-xs text-slate-500" numberOfLines={1}>
+          <View className="max-w-[42%] flex-row items-center gap-1">
+            <Text className="text-[10px] text-slate-400">📍</Text>
+            <Text className="text-[11px] text-slate-500" numberOfLines={1}>
               {distance === null ? listing.city : formatApproximateDistance(distance)}
             </Text>
           </View>

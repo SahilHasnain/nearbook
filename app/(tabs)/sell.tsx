@@ -15,6 +15,7 @@ import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createListing, deletePhoto, uploadPhotos } from "@/lib/api";
 import { useAuth } from "@/context/auth";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -23,6 +24,7 @@ import { TextField } from "@/components/ui/TextField";
 import { CONDITIONS, PUBLISHERS, SUBJECTS, type Condition } from "@/lib/types";
 import { requestApproximateCity } from "@/lib/location";
 import { colors } from "@/lib/theme";
+import { CURRENCY_OPTIONS, getDeviceRegion } from "@/lib/regional-settings";
 
 const MAX_PHOTOS = 4;
 
@@ -41,15 +43,56 @@ export default function SellScreen() {
   const [edition, setEdition] = useState("");
   const [condition, setCondition] = useState<Condition>("good");
   const [price, setPrice] = useState("");
+  const [currencyCode, setCurrencyCode] = useState(() => getDeviceRegion().currencyCode);
+  const [customCurrencyCode, setCustomCurrencyCode] = useState("");
+  const [currencyIsCustom, setCurrencyIsCustom] = useState(false);
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [sunniSeller, setSunniSeller] = useState<boolean | null>(null);
+  const [eligibilityLoaded, setEligibilityLoaded] = useState(false);
   const [locating, setLocating] = useState(false);
   const [bottomPad, setBottomPad] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const focusedFieldRef = useRef<"description" | null>(null);
   const keyboardHeightRef = useRef(0);
   const locationPromptedRef = useRef(false);
+  const eligibilityStorageKey = `seller-eligibility:${user?.$id ?? "guest"}`;
+
+  useEffect(() => {
+    let active = true;
+    setEligibilityLoaded(false);
+    AsyncStorage.getItem(eligibilityStorageKey)
+      .then((saved) => {
+        if (active) setSunniSeller(saved === "yes" ? true : saved === "no" ? false : null);
+      })
+      .catch(() => {
+        if (active) setSunniSeller(null);
+      })
+      .finally(() => {
+        if (active) setEligibilityLoaded(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [eligibilityStorageKey]);
+
+  async function saveEligibility(isEligible: boolean) {
+    try {
+      await AsyncStorage.setItem(eligibilityStorageKey, isEligible ? "yes" : "no");
+      setSunniSeller(isEligible);
+    } catch {
+      Alert.alert("Could not save answer", "Please try again.");
+    }
+  }
+
+  async function changeEligibilityAnswer() {
+    try {
+      await AsyncStorage.removeItem(eligibilityStorageKey);
+      setSunniSeller(null);
+    } catch {
+      Alert.alert("Could not change answer", "Please try again.");
+    }
+  }
 
   const onUseCurrentLocation = useCallback(async () => {
     setLocating(true);
@@ -67,7 +110,7 @@ export default function SellScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!user || sunniSeller !== true || (city && coordinates) || locationPromptedRef.current) return;
+      if (!user || !eligibilityLoaded || sunniSeller !== true || (city && coordinates) || locationPromptedRef.current) return;
       locationPromptedRef.current = true;
       Alert.alert(
         "Location required to sell",
@@ -82,7 +125,7 @@ export default function SellScreen() {
           { text: "Not now", style: "cancel" },
         ]
       );
-    }, [user, sunniSeller, city, coordinates, onUseCurrentLocation])
+    }, [user, eligibilityLoaded, sunniSeller, city, coordinates, onUseCurrentLocation])
   );
 
   useEffect(() => {
@@ -164,6 +207,9 @@ export default function SellScreen() {
     setEdition("");
     setCondition("good");
     setPrice("");
+    setCurrencyCode(getDeviceRegion().currencyCode);
+    setCustomCurrencyCode("");
+    setCurrencyIsCustom(false);
     setDescription("");
     setBottomPad(0);
     focusedFieldRef.current = null;
@@ -173,8 +219,17 @@ export default function SellScreen() {
   async function onSubmit() {
     if (!user) return;
     const priceNum = Number(price);
-    if (!title.trim() || !publisher.trim() || !Number.isFinite(priceNum) || priceNum <= 0) {
-      Alert.alert("Incomplete", "Fill in the book name, publisher, and a valid price.");
+    const listingCurrency = currencyIsCustom
+      ? customCurrencyCode.trim().toUpperCase()
+      : currencyCode;
+    if (
+      !title.trim() ||
+      !(publisherIsCustom ? customPublisher.trim() : publisher.trim()) ||
+      !/^[A-Z]{3}$/.test(listingCurrency) ||
+      !Number.isFinite(priceNum) ||
+      priceNum <= 0
+    ) {
+      Alert.alert("Incomplete", "Enter a book, publisher, valid currency code, and price.");
       return;
     }
     setSubmitting(true);
@@ -207,6 +262,7 @@ export default function SellScreen() {
           edition: edition.trim(),
           condition,
           price: priceNum,
+          currencyCode: listingCurrency,
           city: city!.trim(),
           locationLatitude: coordinates!.latitude,
           locationLongitude: coordinates!.longitude,
@@ -238,13 +294,18 @@ export default function SellScreen() {
     title.trim() &&
     (publisherIsCustom ? customPublisher.trim() : publisher.trim()) &&
     (!categoryIsCustom || customCategory.trim()) &&
+    /^[A-Z]{3}$/.test(currencyIsCustom ? customCurrencyCode.trim().toUpperCase() : currencyCode) &&
     Number.isFinite(Number(price)) &&
     Number(price) > 0 &&
     Boolean(city?.trim() && coordinates);
 
   return (
     <RequireAuth>
-      {sunniSeller === null ? (
+      {!eligibilityLoaded ? (
+        <View className="flex-1 items-center justify-center bg-amber-50">
+          <Text className="text-sm text-slate-500">Loading seller eligibility…</Text>
+        </View>
+      ) : sunniSeller === null ? (
         <View className="flex-1 items-center justify-center gap-4 bg-amber-50 px-8">
           <Text className="text-center text-2xl font-bold text-slate-900">Seller eligibility</Text>
           <Text className="text-center text-base leading-6 text-slate-600">
@@ -252,13 +313,13 @@ export default function SellScreen() {
           </Text>
           <Button
             title="Yes, continue"
-            onPress={() => setSunniSeller(true)}
+            onPress={() => void saveEligibility(true)}
             className="w-full rounded-2xl"
           />
           <Button
             title="No"
             variant="secondary"
-            onPress={() => setSunniSeller(false)}
+            onPress={() => void saveEligibility(false)}
             className="w-full rounded-2xl"
           />
         </View>
@@ -276,7 +337,7 @@ export default function SellScreen() {
           <Button
             title="Change my answer"
             variant="secondary"
-            onPress={() => setSunniSeller(null)}
+            onPress={() => void changeEligibilityAnswer()}
             className="w-full rounded-2xl"
           />
         </View>
@@ -442,16 +503,42 @@ export default function SellScreen() {
 
         <View className="flex-row gap-3">
           <View className="flex-1">
-            <TextField
-              label="Price (₹)"
+          <TextField
+              label={`Price (${currencyIsCustom ? customCurrencyCode || "currency" : currencyCode})`}
               value={price}
               onChangeText={setPrice}
               keyboardType="number-pad"
-              placeholder="e.g. 450"
+              placeholder="Enter amount"
             />
           </View>
 
         </View>
+        <DropdownField
+          label="Currency"
+          value={currencyIsCustom ? "Custom currency" : CURRENCY_OPTIONS.find((option) => option.startsWith(`${currencyCode} —`)) ?? currencyCode}
+          placeholder="Choose currency"
+          options={CURRENCY_OPTIONS}
+          onSelect={(option) => {
+            if (option === "__custom__") {
+              setCurrencyIsCustom(true);
+              setCurrencyCode("");
+            } else {
+              setCurrencyIsCustom(false);
+              setCustomCurrencyCode("");
+              setCurrencyCode(option.slice(0, 3));
+            }
+          }}
+        />
+        {currencyIsCustom ? (
+          <TextField
+            label="Currency code"
+            value={customCurrencyCode}
+            onChangeText={setCustomCurrencyCode}
+            placeholder="e.g. CHF"
+            autoCapitalize="characters"
+            maxLength={3}
+          />
+        ) : null}
         <View className="gap-1.5">
           <Text className="text-sm font-medium text-slate-700">Description</Text>
           <TextInput

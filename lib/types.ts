@@ -1,4 +1,5 @@
 import type { Models } from "react-native-appwrite";
+import { formatCurrency } from "@/lib/regional-settings";
 
 export type Condition = "new" | "like-new" | "good" | "fair" | "poor";
 
@@ -11,6 +12,7 @@ export interface Listing extends Models.Document {
   edition: string;
   condition: Condition;
   price: number;
+  currencyCode?: string;
   city: string;
   locationLatitude?: number;
   locationLongitude?: number;
@@ -81,6 +83,7 @@ export interface ListingFilters {
   publisher?: string;
   condition?: Condition;
   maxPrice?: number;
+  currencyCode?: string;
 }
 
 export interface NewListing {
@@ -90,6 +93,7 @@ export interface NewListing {
   edition: string;
   condition: Condition;
   price: number;
+  currencyCode: string;
   city: string;
   locationLatitude?: number;
   locationLongitude?: number;
@@ -97,6 +101,6 @@ export interface NewListing {
   photos: string[];
 }
 
-export function formatPrice(price: number): string {
-  return `₹${price.toLocaleString("en-IN")}`;
+export function formatPrice(price: number, currencyCode: string | null = "INR"): string {
+  return formatCurrency(price, currencyCode);
 }

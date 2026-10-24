@@ -47,7 +47,8 @@
         {
           "locationWhenInUsePermission": "Allow Sunni NearBook to use your approximate location to show nearby book listings."
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true,

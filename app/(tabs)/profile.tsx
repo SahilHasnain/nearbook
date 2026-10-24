@@ -16,6 +16,7 @@ import { EmptyState, Spinner } from "@/components/ui/Spinner";
 import { formatPrice, type Listing } from "@/lib/types";
 import { requestApproximateCity } from "@/lib/location";
 import { colors } from "@/lib/theme";
+import { getDeviceRegion } from "@/lib/regional-settings";
 
 export default function ProfileScreen() {
   const { user, city, setLocation, signOut } = useAuth();
@@ -25,6 +26,7 @@ export default function ProfileScreen() {
   const [loadingListings, setLoadingListings] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
+  const deviceRegion = getDeviceRegion();
 
   const loadListings = useCallback(async () => {
     if (!user) return;
@@ -135,6 +137,16 @@ export default function ProfileScreen() {
         />
       </View>
 
+      <View className="gap-1 rounded-2xl border border-slate-100 bg-white p-4">
+        <Text className="font-semibold text-slate-900">Regional settings</Text>
+        <Text className="text-sm text-slate-600">
+          {deviceRegion.regionName ?? "Region unavailable"} · {deviceRegion.currencyCode}
+        </Text>
+        <Text className="text-xs leading-5 text-slate-500">
+          Listing prices use the seller’s currency. Your device region sets the default currency when you list a book.
+        </Text>
+      </View>
+
       <Pressable
         onPress={() => router.push("/saved")}
         className="flex-row items-center justify-between rounded-2xl border border-slate-100 p-4 active:bg-slate-50"
@@ -166,7 +178,7 @@ export default function ProfileScreen() {
                   {listing.title}
                 </Text>
                 <Text className="text-sm text-slate-500">
-                  {formatPrice(listing.price)} • {listing.city}
+                  {formatPrice(listing.price, listing.currencyCode)} • {listing.city}
                 </Text>
                 <Text
                   className={[

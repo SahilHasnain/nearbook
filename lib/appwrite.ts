@@ -4,6 +4,7 @@ import {
   Databases,
   Functions,
   ID,
+  IdTokenProvider,
   Storage,
 } from "react-native-appwrite";
 import "./local-storage";
@@ -18,6 +19,9 @@ export const config = {
   projectId:
     process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID || "69a534420031c03a6505",
   platform: process.env.EXPO_PUBLIC_APPWRITE_PLATFORM || "com.nearbook",
+  googleWebClientId:
+    process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
+    "54913434337-226cbfet04pjn52fbgqulf6s83c2pggt.apps.googleusercontent.com",
   databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID || "",
   createConversationFunctionId:
     process.env.EXPO_PUBLIC_APPWRITE_CREATE_CONVERSATION_FUNCTION_ID ||
@@ -46,6 +50,7 @@ export const client = new Client()
   .setPlatform(config.platform);
 
 export const account = new Account(client);
+export { IdTokenProvider };
 export const databases = new Databases(client);
 export const functions = new Functions(client);
 export const storage = new Storage(client);
