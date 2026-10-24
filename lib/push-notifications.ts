@@ -19,7 +19,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
       name: "NearBook activity",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#d4a24c",
+      lightColor: "#D4A24C",
     });
   }
 
