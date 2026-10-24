@@ -2,9 +2,13 @@ import { Image, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { photoUrl } from "@/lib/api";
 import { formatPrice, type Listing } from "@/lib/types";
+import { useAuth } from "@/context/auth";
+import { distanceToListing, formatApproximateDistance } from "@/lib/distance";
 
 export function ListingCard({ listing }: { listing: Listing }) {
   const router = useRouter();
+  const { coordinates } = useAuth();
+  const distance = distanceToListing(coordinates, listing);
   const cover = listing.photos[0];
   const coverUrl = cover ? photoUrl(cover) : undefined;
 
@@ -27,7 +31,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
           }
         />
       ) : (
-        <View className="h-40 w-full items-center justify-center bg-indigo-50">
+        <View className="h-40 w-full items-center justify-center bg-amber-50">
           <Text className="text-3xl">📚</Text>
         </View>
       )}
@@ -45,12 +49,14 @@ export function ListingCard({ listing }: { listing: Listing }) {
           ) : null}
         </View>
         <View className="flex-row items-center justify-between">
-          <Text className="text-lg font-bold text-indigo-600">
+          <Text className="text-lg font-bold text-slate-900">
             {formatPrice(listing.price)}
           </Text>
           <View className="flex-row items-center gap-1">
             <Text className="text-xs text-slate-400">📍</Text>
-            <Text className="text-xs text-slate-500">{listing.city}</Text>
+            <Text className="max-w-[85px] text-xs text-slate-500" numberOfLines={1}>
+              {distance === null ? listing.city : formatApproximateDistance(distance)}
+            </Text>
           </View>
         </View>
       </View>

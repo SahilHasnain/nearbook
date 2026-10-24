@@ -12,6 +12,8 @@ export interface Listing extends Models.Document {
   condition: Condition;
   price: number;
   city: string;
+  locationLatitude?: number;
+  locationLongitude?: number;
   photos: string[];
   sellerId: string;
   sellerName: string;
@@ -55,17 +57,13 @@ export interface AppNotification extends Models.Document {
   read: boolean;
 }
 
-export const SUBJECTS = ["Physics", "Chemistry", "Biology"] as const;
+export const SUBJECTS = ["Qur’an & Tafsir", "Hadith", "Aqeedah", "Fiqh", "Seerah", "Islamic History", "Arabic", "Children’s Books"] as const;
 
 export const PUBLISHERS = [
-  "NCERT",
-  "MTG",
-  "Allen",
-  "Aakash",
-  "Resonance",
-  "Cengage",
-  "HC Verma",
-  "Disha",
+  "Abde Mustafa",
+  "Raza Academy",
+  "Maktaba ul Madina",
+  "Sunni Publication",
   "Other",
 ] as const;
 
@@ -93,6 +91,8 @@ export interface NewListing {
   condition: Condition;
   price: number;
   city: string;
+  locationLatitude?: number;
+  locationLongitude?: number;
   description?: string;
   photos: string[];
 }

@@ -18,6 +18,7 @@ import { ErrorState } from "@/components/ui/Spinner";
 import KeyboardSpacer from "@/components/KeyboardSpacer";
 import { refreshUnreadChats } from "@/lib/chat-center";
 import type { Conversation, Message } from "@/lib/types";
+import { colors } from "@/lib/theme";
 
 export default function ChatThreadScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -117,8 +118,8 @@ export default function ChatThreadScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#4f46e5" />
+      <View className="flex-1 items-center justify-center bg-amber-50">
+        <ActivityIndicator size="large" color={colors.amber600} />
       </View>
     );
   }
@@ -128,7 +129,7 @@ export default function ChatThreadScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-amber-50">
       <View
         className="border-b border-slate-100 px-4 pb-3"
         style={{ paddingTop: insets.top + 12 }}
@@ -151,16 +152,16 @@ export default function ChatThreadScreen() {
             <View
               className={[
                 "max-w-[80%] rounded-2xl px-4 py-2.5",
-                mine ? "self-end bg-indigo-600" : "self-start bg-slate-100",
+                mine ? "self-end bg-amber-700" : "self-start bg-slate-100",
               ].join(" ")}
             >
-              <Text className={mine ? "text-white" : "text-slate-800"}>
+              <Text className={mine ? "text-slate-900" : "text-slate-800"}>
                 {item.text}
               </Text>
               <Text
                 className={[
                   "mt-1 text-[10px]",
-                  mine ? "text-indigo-200" : "text-slate-400",
+                  mine ? "text-slate-700" : "text-slate-400",
                 ].join(" ")}
               >
                 {formatTime(item.$createdAt)}
@@ -180,16 +181,16 @@ export default function ChatThreadScreen() {
             value={text}
             onChangeText={setText}
             placeholder="Message…"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={colors.slate400}
             multiline
             className="max-h-24 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-base text-slate-900"
           />
           <Pressable
             onPress={onSend}
             disabled={!text.trim() || sending}
-            className="h-11 w-11 items-center justify-center rounded-full bg-indigo-600 active:bg-indigo-700 disabled:opacity-50"
+            className="h-11 w-11 items-center justify-center rounded-full bg-amber-700 active:bg-amber-800 disabled:opacity-50"
           >
-            <Ionicons name="send" size={18} color="#fff" />
+            <Ionicons name="send" size={18} color={colors.slate900} />
           </Pressable>
         </View>
         <KeyboardSpacer />

@@ -11,7 +11,12 @@ import { account, isDemo } from "@/lib/appwrite";
 import { getDemoUser } from "@/lib/demo-user";
 import type { Models } from "react-native-appwrite";
 
-export type Profile = Models.User<{ city?: string }>;
+export type Profile = Models.User<{
+  city?: string;
+  locationLatitude?: number | null;
+  locationLongitude?: number | null;
+}>;
+export type ApproximateCoordinates = { latitude: number; longitude: number };
 
 const demoProfile = getDemoUser();
 
@@ -33,12 +38,13 @@ interface AuthContextValue {
   user: Profile | null;
   loading: boolean;
   city: string | null;
+  coordinates: ApproximateCoordinates | null;
   signOut: () => Promise<void>;
-  setCity: (city: string) => Promise<void>;
+  setLocation: (location: { label: string } & ApproximateCoordinates) => Promise<void>;
   refresh: () => Promise<void>;
   requestEmailToken: (email: string) => Promise<string>;
   verifyEmailToken: (userId: string, secret: string) => Promise<Profile>;
-  completeProfile: (name: string, city?: string) => Promise<Profile>;
+  completeProfile: (name: string) => Promise<Profile>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -46,6 +52,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [browsingCity, setBrowsingCity] = useState<string | null>(null);
+  const [browsingCoordinates, setBrowsingCoordinates] = useState<ApproximateCoordinates | null>(null);
 
   const refresh = useCallback(async () => {
     if (isDemo) {
@@ -72,17 +80,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  const setCity = useCallback(
-    async (city: string) => {
+  const setLocation = useCallback(
+    async (location: { label: string } & ApproximateCoordinates) => {
+      const { label, latitude, longitude } = location;
+      setBrowsingCity(label);
+      setBrowsingCoordinates({ latitude, longitude });
+      if (!user) return;
+      const prefs = { city: label, locationLatitude: latitude, locationLongitude: longitude };
       if (isDemo) {
-        demoProfile.prefs = { city };
+        demoProfile.prefs = prefs;
         setUser({ ...demoProfile });
         return;
       }
-      await account.updatePrefs({ city });
+      await account.updatePrefs(prefs);
       setUser(await account.get());
     },
-    []
+    [user]
   );
 
   const requestEmailToken = useCallback(async (email: string): Promise<string> => {
@@ -121,21 +134,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const completeProfile = useCallback(
-    async (name: string, city?: string): Promise<Profile> => {
+    async (name: string): Promise<Profile> => {
       const cleanName = name.trim();
-      const cleanCity = city?.trim();
       if (isDemo) {
         if (cleanName) demoProfile.name = cleanName;
-        if (cleanCity) demoProfile.prefs = { city: cleanCity };
         setUser({ ...demoProfile });
         return { ...demoProfile };
       }
       const updates: Promise<unknown>[] = [];
       if (cleanName && cleanName !== user?.name) {
         updates.push(account.updateName({ name: cleanName }));
-      }
-      if (cleanCity) {
-        updates.push(account.updatePrefs({ city: cleanCity }));
       }
       await Promise.all(updates);
       const profile = (await account.get()) as Profile;
@@ -149,9 +157,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       loading,
-      city: (user?.prefs?.city as string | undefined) ?? null,
+      city: (user?.prefs?.city as string | undefined) ?? browsingCity,
+      coordinates:
+        typeof user?.prefs?.locationLatitude === "number" &&
+        typeof user?.prefs?.locationLongitude === "number"
+          ? {
+              latitude: user.prefs.locationLatitude,
+              longitude: user.prefs.locationLongitude,
+            }
+          : browsingCoordinates,
       signOut,
-      setCity,
+      setLocation,
       refresh,
       requestEmailToken,
       verifyEmailToken,
@@ -159,9 +175,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }),
     [
       user,
+      browsingCity,
+      browsingCoordinates,
       loading,
       signOut,
-      setCity,
+      setLocation,
       refresh,
       requestEmailToken,
       verifyEmailToken,

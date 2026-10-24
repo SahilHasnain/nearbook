@@ -12,19 +12,19 @@ import { listMyListings, setListingStatus } from "@/lib/api";
 import { useAuth } from "@/context/auth";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Button } from "@/components/ui/Button";
-import { TextField } from "@/components/ui/TextField";
 import { EmptyState, Spinner } from "@/components/ui/Spinner";
 import { formatPrice, type Listing } from "@/lib/types";
+import { requestApproximateCity } from "@/lib/location";
+import { colors } from "@/lib/theme";
 
 export default function ProfileScreen() {
-  const { user, city, setCity, signOut } = useAuth();
+  const { user, city, setLocation, signOut } = useAuth();
   const router = useRouter();
-  const [draft, setDraft] = useState(city ?? "");
-  const [saving, setSaving] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [listings, setListings] = useState<Listing[]>([]);
   const [loadingListings, setLoadingListings] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
 
   const loadListings = useCallback(async () => {
     if (!user) return;
@@ -44,14 +44,18 @@ export default function ProfileScreen() {
     }, [loadListings])
   );
 
-  async function onSaveCity() {
-    setSaving(true);
+  async function onUseLocation() {
+    setLocating(true);
     try {
-      await setCity(draft.trim());
-    } catch {
-      Alert.alert("Error", "Could not save city.");
+      const detectedLocation = await requestApproximateCity();
+      await setLocation(detectedLocation);
+    } catch (error) {
+      Alert.alert(
+        "Location unavailable",
+          error instanceof Error ? error.message : "Please try again or check location permission."
+      );
     } finally {
-      setSaving(false);
+      setLocating(false);
     }
   }
 
@@ -105,10 +109,10 @@ export default function ProfileScreen() {
 
   return (
     <RequireAuth>
-      <ScrollView className="flex-1 bg-white" contentContainerClassName="p-6 gap-8">
+      <ScrollView className="flex-1 bg-amber-50" contentContainerClassName="p-6 gap-8">
       <View className="items-center gap-3 pt-8">
-        <View className="h-20 w-20 items-center justify-center rounded-full bg-indigo-600">
-          <Text className="text-3xl font-bold text-white">
+        <View className="h-20 w-20 items-center justify-center rounded-full bg-amber-700">
+          <Text className="text-3xl font-bold text-slate-900">
             {(user?.name ?? "?").charAt(0).toUpperCase()}
           </Text>
         </View>
@@ -119,21 +123,15 @@ export default function ProfileScreen() {
       </View>
 
       <View className="gap-4">
-        <Text className="text-lg font-semibold text-slate-900">Your city</Text>
+        <Text className="text-lg font-semibold text-slate-900">Your location</Text>
         <Text className="text-sm text-slate-500">
-          Listings from your city show up first.
+          {city ? `📍 ${city}` : "Location not set"}
         </Text>
-        <TextField
-          value={draft}
-          onChangeText={setDraft}
-          placeholder="e.g. Patna"
-          autoCapitalize="words"
-        />
         <Button
-          title="Save city"
-          onPress={onSaveCity}
-          loading={saving}
-          disabled={!draft.trim() || draft.trim() === city}
+          title={locating ? "Finding your location…" : city ? "Update Location" : "Find Location"}
+          variant="secondary"
+          onPress={onUseLocation}
+          loading={locating}
         />
       </View>
 
@@ -142,12 +140,12 @@ export default function ProfileScreen() {
         className="flex-row items-center justify-between rounded-2xl border border-slate-100 p-4 active:bg-slate-50"
       >
         <View className="flex-row items-center gap-3">
-          <View className="h-10 w-10 items-center justify-center rounded-full bg-indigo-50">
-            <Ionicons name="bookmark" size={18} color="#4f46e5" />
+          <View className="h-10 w-10 items-center justify-center rounded-full bg-amber-50">
+            <Ionicons name="bookmark" size={18} color={colors.amber700} />
           </View>
           <Text className="font-semibold text-slate-900">Saved books</Text>
         </View>
-        <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+        <Ionicons name="chevron-forward" size={18} color={colors.slate400} />
       </Pressable>
 
       <View className="gap-3">
@@ -174,7 +172,7 @@ export default function ProfileScreen() {
                   className={[
                     "text-xs font-semibold",
                     listing.status === "active"
-                      ? "text-emerald-600"
+                      ? "text-slate-800"
                       : "text-slate-400",
                   ].join(" ")}
                 >

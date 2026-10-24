@@ -40,7 +40,7 @@ export default function ChatScreen() {
       ) : error ? (
         <ErrorState message={error} onRetry={load} />
       ) : (
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-amber-50">
           <Text className="px-5 pb-3 pt-16 text-2xl font-bold text-slate-900">
             Chats
           </Text>
@@ -59,8 +59,8 @@ export default function ChatScreen() {
                     onPress={() => router.push(`/chat/${item.$id}`)}
                     className="flex-row items-center gap-3 rounded-xl px-2 py-3 active:bg-slate-50"
                   >
-                    <View className="h-12 w-12 items-center justify-center rounded-full bg-indigo-100">
-                      <Text className="text-lg font-bold text-indigo-700">
+                    <View className="h-12 w-12 items-center justify-center rounded-full bg-amber-100">
+                      <Text className="text-lg font-bold text-slate-800">
                         {otherName.charAt(0).toUpperCase()}
                       </Text>
                     </View>

@@ -17,6 +17,8 @@
         { "type": "string", "key": "condition", "required": true, "size": 20 },
         { "type": "integer", "key": "price", "required": true, "min": 0 },
         { "type": "string", "key": "city", "required": true, "size": 100 },
+        { "type": "float", "key": "locationLatitude", "required": false, "min": -90, "max": 90 },
+        { "type": "float", "key": "locationLongitude", "required": false, "min": -180, "max": 180 },
         { "type": "string", "key": "photos", "required": false, "array": true, "size": 100 },
         { "type": "string", "key": "sellerId", "required": true, "size": 50 },
         { "type": "string", "key": "sellerName", "required": true, "size": 128 },

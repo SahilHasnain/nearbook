@@ -24,6 +24,8 @@ import { useAuthGate } from "@/context/auth-gate";
 import { Button } from "@/components/ui/Button";
 import { ErrorState } from "@/components/ui/Spinner";
 import { formatPrice, type Listing } from "@/lib/types";
+import { distanceToListing, formatApproximateDistance } from "@/lib/distance";
+import { colors } from "@/lib/theme";
 
 const CONDITION_LABELS: Record<string, string> = {
   new: "New",
@@ -37,7 +39,7 @@ export default function ListingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const { user, coordinates } = useAuth();
   const { requireAuth } = useAuthGate();
   const [listing, setListing] = useState<Listing | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -115,8 +117,8 @@ export default function ListingDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#4f46e5" />
+      <View className="flex-1 items-center justify-center bg-amber-50">
+        <ActivityIndicator size="large" color={colors.amber600} />
       </View>
     );
   }
@@ -128,7 +130,7 @@ export default function ListingDetailScreen() {
   const isMine = user?.$id === listing.sellerId;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-amber-50">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: insets.top }}
@@ -157,7 +159,7 @@ export default function ListingDetailScreen() {
             ))}
           </ScrollView>
         ) : (
-          <View className="h-72 w-full items-center justify-center bg-indigo-50">
+          <View className="h-72 w-full items-center justify-center bg-amber-50">
             <Text className="text-5xl">📚</Text>
           </View>
         )}
@@ -180,17 +182,17 @@ export default function ListingDetailScreen() {
               <Ionicons
                 name={saved ? "bookmark" : "bookmark-outline"}
                 size={26}
-                color={saved ? "#4f46e5" : "#94a3b8"}
+                color={saved ? colors.amber600 : colors.slate400}
               />
             </Pressable>
           </View>
 
           <View className="flex-row items-center justify-between">
-            <Text className="text-3xl font-bold text-indigo-600">
+            <Text className="text-3xl font-bold text-slate-900">
               {formatPrice(listing.price)}
             </Text>
-            <View className="rounded-full bg-emerald-50 px-3 py-1">
-              <Text className="text-xs font-semibold text-emerald-700">
+            <View className="rounded-full bg-amber-50 px-3 py-1">
+              <Text className="text-xs font-semibold text-slate-800">
                 {CONDITION_LABELS[listing.condition] ?? listing.condition}
               </Text>
             </View>
@@ -209,8 +211,8 @@ export default function ListingDetailScreen() {
 
           <View className="flex-row items-center justify-between rounded-2xl border border-slate-100 p-4">
             <View className="flex-row items-center gap-3">
-              <View className="h-11 w-11 items-center justify-center rounded-full bg-indigo-600">
-                <Text className="text-lg font-bold text-white">
+              <View className="h-11 w-11 items-center justify-center rounded-full bg-amber-700">
+                <Text className="text-lg font-bold text-slate-900">
                   {listing.sellerName.charAt(0).toUpperCase()}
                 </Text>
               </View>
@@ -218,7 +220,12 @@ export default function ListingDetailScreen() {
                 <Text className="font-semibold text-slate-900">
                   {listing.sellerName}
                 </Text>
-                <Text className="text-sm text-slate-500">📍 {listing.city}</Text>
+                <Text className="text-sm text-slate-500">
+                  📍 {listing.city}
+                  {distanceToListing(coordinates, listing) !== null
+                    ? ` · ${formatApproximateDistance(distanceToListing(coordinates, listing)!)}`
+                    : ""}
+                </Text>
               </View>
             </View>
           </View>

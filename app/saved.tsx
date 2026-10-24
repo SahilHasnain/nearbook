@@ -44,7 +44,7 @@ export default function SavedScreen() {
       ) : error ? (
         <ErrorState message={error} onRetry={load} />
       ) : (
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-amber-50">
           <FlatList
             data={listings}
             keyExtractor={(item) => item.$id}

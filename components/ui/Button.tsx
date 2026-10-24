@@ -5,6 +5,7 @@ import {
   type PressableProps,
 } from "react-native";
 import { cn } from "@/lib/utils";
+import { colors } from "@/lib/theme";
 
 interface ButtonProps extends PressableProps {
   title: string;
@@ -13,16 +14,16 @@ interface ButtonProps extends PressableProps {
 }
 
 const variants = {
-  primary: "bg-indigo-600 active:bg-indigo-700",
+  primary: "bg-amber-600 active:bg-amber-700",
   secondary: "bg-slate-100 active:bg-slate-200",
   ghost: "bg-transparent active:bg-slate-100",
   danger: "bg-red-50 active:bg-red-100",
 } as const;
 
 const textVariants = {
-  primary: "text-white",
+  primary: "text-slate-900",
   secondary: "text-slate-900",
-  ghost: "text-indigo-600",
+  ghost: "text-slate-900",
   danger: "text-red-600",
 } as const;
 
@@ -47,7 +48,7 @@ export function Button({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === "primary" ? "#ffffff" : "#4f46e5"}
+          color={variant === "primary" ? colors.slate900 : colors.amber800}
         />
       ) : (
         <Text className={cn("text-base font-semibold", textVariants[variant])}>

@@ -12,6 +12,7 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { EmptyState, ErrorState, Spinner } from "@/components/ui/Spinner";
 import { refreshUnread, setUnread } from "@/lib/notification-center";
 import type { AppNotification, NotificationType } from "@/lib/types";
+import { colors } from "@/lib/theme";
 
 const TYPE_ICON: Record<NotificationType, keyof typeof Ionicons.glyphMap> = {
   message: "chatbubble",
@@ -87,14 +88,14 @@ export default function NotificationsScreen() {
       ) : error ? (
         <ErrorState message={error} onRetry={load} />
       ) : (
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-amber-50">
           <View className="flex-row items-center justify-between px-5 pb-3 pt-16">
             <Text className="text-2xl font-bold text-slate-900">
               Notifications
             </Text>
             {unreadCount > 0 ? (
               <Pressable onPress={onMarkAllRead} className="rounded-full px-3 py-1.5">
-                <Text className="text-sm font-medium text-indigo-600">
+                <Text className="text-sm font-medium text-slate-800">
                   Mark all read
                 </Text>
               </Pressable>
@@ -117,8 +118,8 @@ export default function NotificationsScreen() {
                     onPress={() => onPress(item)}
                     className="flex-row items-center gap-3 rounded-xl px-2 py-3 active:bg-slate-50"
                   >
-                    <View className="h-12 w-12 items-center justify-center rounded-full bg-indigo-100">
-                      <Ionicons name={TYPE_ICON[item.type]} size={20} color="#4338ca" />
+                    <View className="h-12 w-12 items-center justify-center rounded-full bg-amber-100">
+                      <Ionicons name={TYPE_ICON[item.type]} size={20} color={colors.amber700} />
                     </View>
                     <View className="flex-1 gap-0.5">
                       <View className="flex-row items-center justify-between">
@@ -132,7 +133,7 @@ export default function NotificationsScreen() {
                           {item.title}
                         </Text>
                         {unread ? (
-                          <View className="ml-2 h-2.5 w-2.5 rounded-full bg-indigo-600" />
+                          <View className="ml-2 h-2.5 w-2.5 rounded-full bg-amber-600" />
                         ) : null}
                       </View>
                       <Text className="text-sm text-slate-500" numberOfLines={2}>

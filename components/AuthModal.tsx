@@ -26,7 +26,6 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
   const [code, setCode] = useState("");
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
-  const [city, setCity] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,7 +36,6 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
       setCode("");
       setUserId("");
       setName("");
-      setCity("");
       setError(null);
       setLoading(false);
     }
@@ -92,7 +90,7 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
     setLoading(true);
     setError(null);
     try {
-      onSuccess(await completeProfile(name, city || undefined));
+      onSuccess(await completeProfile(name));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't save your profile.");
     } finally {
@@ -180,13 +178,6 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
                 placeholder="Your name"
                 error={error ?? undefined}
               />
-              <TextField
-                label="City (optional)"
-                value={city}
-                onChangeText={setCity}
-                autoCapitalize="words"
-                placeholder="e.g. Patna"
-              />
             </View>
           )}
 
@@ -197,7 +188,7 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
                 setStep("email");
               }}
             >
-              <Text className="text-center text-sm text-indigo-600">
+              <Text className="text-center text-sm text-slate-900">
                 Change email
               </Text>
             </Pressable>

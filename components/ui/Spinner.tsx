@@ -1,9 +1,10 @@
 import { ActivityIndicator, Text, View } from "react-native";
+import { colors } from "@/lib/theme";
 
 export function Spinner({ label }: { label?: string }) {
   return (
     <View className="flex-1 items-center justify-center gap-3 bg-white">
-      <ActivityIndicator size="large" color="#4f46e5" />
+      <ActivityIndicator size="large" color={colors.amber600} />
       {label ? <Text className="text-sm text-slate-500">{label}</Text> : null}
     </View>
   );
@@ -22,7 +23,7 @@ export function ErrorState({
       {onRetry ? (
         <Text
           onPress={onRetry}
-          className="text-base font-semibold text-indigo-600"
+          className="text-base font-semibold text-slate-900"
         >
           Retry
         </Text>

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "NearBook",
+    "name": "Sunni NearBook",
     "slug": "nearbook",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -12,7 +12,6 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/icon.png",
         "backgroundImage": "./assets/images/icon.png",
         "monochromeImage": "./assets/images/icon.png"
@@ -32,19 +31,21 @@
         {
           "image": "./assets/images/icon.png",
           "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
-          }
+          "resizeMode": "contain"
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow NearBook to access your photos to list your book.",
-          "cameraPermission": "Allow NearBook to use your camera to take photos of your book.",
+          "photosPermission": "Allow Sunni NearBook to access your photos to list your book.",
+          "cameraPermission": "Allow Sunni NearBook to use your camera to take photos of your book.",
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Sunni NearBook to use your approximate location to show nearby book listings."
         }
       ]
     ],

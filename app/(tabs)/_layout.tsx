@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
+import { colors } from "@/lib/theme";
 
 export default function TabsLayout() {
   const unread = useUnreadNotifications();
@@ -10,8 +11,8 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#4f46e5",
-        tabBarInactiveTintColor: "#94a3b8",
+        tabBarActiveTintColor: colors.amber800,
+        tabBarInactiveTintColor: colors.slate400,
       }}
     >
       <Tabs.Screen

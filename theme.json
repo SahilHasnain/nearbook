@@ -1,0 +1,17 @@
+{
+  "colors": {
+    "amber600": "#d4a24c",
+    "amber700": "#a4772f",
+    "amber800": "#78531f",
+    "slate400": "#8b8375",
+    "slate500": "#665f52",
+    "slate800": "#2b2418",
+    "slate900": "#17130b",
+    "white": "#ffffff"
+  },
+  "native": {
+    "adaptiveIconBackground": "#fcfaf5",
+    "splashBackground": "#fcfaf5",
+    "darkSplashBackground": "#000000"
+  }
+}
