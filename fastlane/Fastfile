@@ -1,0 +1,17 @@
+default_platform(:android)
+
+platform :android do
+  desc "Upload the built NearBook App Bundle to Google Play"
+  lane :deploy do
+    upload_to_play_store(
+      track: ENV.fetch("PLAY_TRACK", "production"),
+      aab: ENV.fetch("AAB_PATH"),
+      package_name: ENV.fetch("ANDROID_APPLICATION_ID", "com.nearbook"),
+      json_key: ENV.fetch("SUPPLY_JSON_KEY"),
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end

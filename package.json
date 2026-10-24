@@ -5,12 +5,13 @@
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
     "build:prod": "eas build --platform android --profile production",
-    "postinstall": "node scripts/patch-appwrite.mjs"
+    "postinstall": "node scripts/patch-appwrite.mjs",
+    "build:dev": "eas build --platform android --profile development"
   },
   "overrides": {
     "expo-file-system": "^57.0.7"
@@ -24,6 +25,7 @@
     "@react-navigation/native": "^7.1.8",
     "expo": "^57.0.0",
     "expo-constants": "~57.0.19",
+    "expo-dev-client": "~57.0.20",
     "expo-file-system": "^57.0.7",
     "expo-font": "~57.0.4",
     "expo-haptics": "~57.0.3",
@@ -32,6 +34,7 @@
     "expo-linking": "~57.0.11",
     "expo-localization": "~57.0.2",
     "expo-location": "~57.0.22",
+    "expo-notifications": "~57.0.24",
     "expo-router": "~57.0.23",
     "expo-splash-screen": "~57.0.9",
     "expo-status-bar": "~57.0.1",

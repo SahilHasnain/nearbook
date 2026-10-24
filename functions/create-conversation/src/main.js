@@ -11,6 +11,23 @@ function json(res, body, status = 200) {
   return res.json(body, status);
 }
 
+async function sendPush(userId, title, message, data, headers, error) {
+  try {
+    const prefsResponse = await fetch(`${endpoint}/users/${userId}/prefs`, { headers });
+    if (!prefsResponse.ok) throw new Error(await prefsResponse.text());
+    const prefs = await prefsResponse.json();
+    if (typeof prefs.expoPushToken !== "string" || !prefs.expoPushToken.startsWith("ExponentPushToken[")) return;
+    const pushResponse = await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ to: prefs.expoPushToken, title, body: message, data, sound: "default", channelId: "default" }),
+    });
+    if (!pushResponse.ok) throw new Error(await pushResponse.text());
+  } catch (pushError) {
+    error(`[push] Could not notify ${userId}: ${pushError.message}`);
+  }
+}
+
 export default async ({ req, res, error }) => {
   if (req.method !== "POST") {
     return json(res, { message: "Method not allowed" }, 405);
@@ -104,6 +121,15 @@ export default async ({ req, res, error }) => {
         );
         if (!notificationResponse.ok) {
           error(`[chat] Contact notification failed: ${await notificationResponse.text()}`);
+        } else {
+          await sendPush(
+            body.sellerId,
+            body.buyerName,
+            `Messaged you about "${body.listingTitle}"`,
+            { listingId: body.listingId, conversationId: documentId },
+            headers,
+            error
+          );
         }
       } catch (notifErr) {
         error(`[chat] Contact notification error: ${notifErr.message}`);

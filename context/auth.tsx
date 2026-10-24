@@ -12,6 +12,7 @@ import { getDemoUser } from "@/lib/demo-user";
 import type { Models } from "react-native-appwrite";
 import { GoogleSignin, isSuccessResponse } from "@react-native-google-signin/google-signin";
 import { Platform } from "react-native";
+import { registerForPushNotifications } from "@/lib/push-notifications";
 
 export type Profile = Models.User<{
   city?: string;
@@ -74,10 +75,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refresh().finally(() => setLoading(false));
   }, [refresh]);
 
+  useEffect(() => {
+    if (!user || isDemo || Platform.OS === "web") return;
+    let active = true;
+    registerForPushNotifications()
+      .then(async (token) => {
+        if (!active || !token) return;
+        const prefs = await account.getPrefs();
+        if (prefs.expoPushToken !== token) {
+          await account.updatePrefs({ prefs: { ...prefs, expoPushToken: token } });
+        }
+      })
+      .catch((error) => console.warn("[push] Registration failed", error));
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
   const signOut = useCallback(async () => {
     if (isDemo) {
       setUser(null);
       return;
+    }
+    try {
+      const prefs = await account.getPrefs();
+      if (prefs.expoPushToken) {
+        const { expoPushToken: _token, ...remainingPrefs } = prefs;
+        await account.updatePrefs({ prefs: remainingPrefs });
+      }
+    } catch (error) {
+      console.warn("[push] Could not unregister device token", error);
     }
     await account.deleteSession({ sessionId: "current" });
     setUser(null);

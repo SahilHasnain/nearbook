@@ -1,0 +1,151 @@
+name: Android CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      build_target:
+        description: Select a debug APK build or production Play Store release
+        required: true
+        default: debug-apk
+        type: choice
+        options:
+          - debug-apk
+          - production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-android:
+    name: Android ${{ inputs.build_target || 'debug-apk' }}
+    runs-on: ubuntu-latest
+    env:
+      EXPO_PUBLIC_DATA_MODE: appwrite
+      BUILD_TARGET: ${{ inputs.build_target || 'debug-apk' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Ruby for Fastlane
+        if: ${{ env.BUILD_TARGET == 'production' }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: false
+
+      - name: Configure Firebase for Android push
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "Missing GOOGLE_SERVICES_JSON_BASE64 GitHub Actions secret."
+            echo "Add the base64-encoded Firebase google-services.json for com.nearbook."
+            exit 1
+          fi
+          printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > google-services.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Android project
+        env:
+          CI: "1"
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Prepare production signing and Play credentials
+        if: ${{ env.BUILD_TARGET == 'production' }}
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          PLAY_STORE_JSON_BASE64: ${{ secrets.PLAY_STORE_JSON_BASE64 }}
+        run: |
+          required=(ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD PLAY_STORE_JSON_BASE64)
+          for name in "${required[@]}"; do
+            if [ -z "${!name}" ]; then
+              echo "Missing required GitHub Actions secret: $name"
+              exit 1
+            fi
+          done
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > /tmp/nearbook-release.keystore
+          printf '%s' "$PLAY_STORE_JSON_BASE64" | base64 --decode > /tmp/nearbook-play-store.json
+          keytool -list -keystore /tmp/nearbook-release.keystore -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" >/dev/null
+
+      - name: Configure release signing
+        if: ${{ env.BUILD_TARGET == 'production' }}
+        env:
+          ANDROID_KEYSTORE_PATH: /tmp/nearbook-release.keystore
+          ANDROID_VERSION_CODE: ${{ github.run_number }}
+        run: node scripts/patch-android-release-signing.mjs
+
+      - name: Build debug APK
+        if: ${{ env.BUILD_TARGET == 'debug-apk' }}
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleDebug
+
+      - name: Build production Android App Bundle
+        if: ${{ env.BUILD_TARGET == 'production' }}
+        env:
+          ANDROID_KEYSTORE_PATH: /tmp/nearbook-release.keystore
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew bundleRelease
+
+      - name: Upload debug APK artifact
+        if: ${{ env.BUILD_TARGET == 'debug-apk' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: nearbook-debug-apk-${{ github.run_number }}
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload production AAB artifact
+        if: ${{ env.BUILD_TARGET == 'production' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: nearbook-production-aab-${{ github.run_number }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Deploy production bundle to Google Play
+        if: ${{ env.BUILD_TARGET == 'production' }}
+        env:
+          SUPPLY_JSON_KEY: /tmp/nearbook-play-store.json
+          ANDROID_APPLICATION_ID: com.nearbook
+          PLAY_TRACK: ${{ vars.PLAY_TRACK || 'production' }}
+          AAB_PATH: android/app/build/outputs/bundle/release/app-release.aab
+        run: |
+          bundle install --gemfile Gemfile
+          bundle exec fastlane android deploy

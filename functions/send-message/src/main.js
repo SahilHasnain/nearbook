@@ -4,9 +4,27 @@ const apiKey = process.env.APPWRITE_FUNCTION_API_KEY;
 const databaseId = "nearbook";
 const messagesCollectionId = "messages";
 const conversationsCollectionId = "conversations";
+const notificationsCollectionId = "notifications";
 
 function json(res, body, status = 200) {
   return res.json(body, status);
+}
+
+async function sendPush(userId, title, messageText, data, headers, error) {
+  try {
+    const prefsResponse = await fetch(`${endpoint}/users/${userId}/prefs`, { headers });
+    if (!prefsResponse.ok) throw new Error(await prefsResponse.text());
+    const prefs = await prefsResponse.json();
+    if (typeof prefs.expoPushToken !== "string" || !prefs.expoPushToken.startsWith("ExponentPushToken[")) return;
+    const pushResponse = await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ to: prefs.expoPushToken, title, body: messageText, data, sound: "default", channelId: "default" }),
+    });
+    if (!pushResponse.ok) throw new Error(await pushResponse.text());
+  } catch (pushError) {
+    error(`[push] Could not notify ${userId}: ${pushError.message}`);
+  }
 }
 
 export default async ({ req, res, error }) => {
@@ -78,6 +96,51 @@ export default async ({ req, res, error }) => {
     });
     if (!conversationResponse.ok) {
       error(`[chat] Conversation update failed: ${await conversationResponse.text()}`);
+    }
+
+    try {
+      const [senderResponse, conversationInfoResponse] = await Promise.all([
+        fetch(`${endpoint}/users/${body.senderId}`, { headers }),
+        fetch(conversationUrl, { headers }),
+      ]);
+      const sender = senderResponse.ok ? await senderResponse.json() : null;
+      const conversation = conversationInfoResponse.ok ? await conversationInfoResponse.json() : null;
+      const senderName = sender?.name || "New message";
+      const notificationData = {
+        userId: body.recipientId,
+        type: "message",
+        title: senderName,
+        body: body.text.trim().slice(0, 500),
+        conversationId: body.conversationId,
+        ...(conversation?.listingId ? { listingId: conversation.listingId } : {}),
+        read: false,
+      };
+      const notificationResponse = await fetch(
+        `${endpoint}/databases/${databaseId}/collections/${notificationsCollectionId}/documents`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            documentId: "unique()",
+            data: notificationData,
+            permissions: [`read("user:${body.recipientId}")`, `update("user:${body.recipientId}")`],
+          }),
+        }
+      );
+      if (!notificationResponse.ok) {
+        error(`[push] Message notification document failed: ${await notificationResponse.text()}`);
+      } else {
+        await sendPush(
+          body.recipientId,
+          senderName,
+          body.text.trim(),
+          { conversationId: body.conversationId, ...(conversation?.listingId ? { listingId: conversation.listingId } : {}) },
+          headers,
+          error
+        );
+      }
+    } catch (notificationError) {
+      error(`[push] Message notification failed: ${notificationError.message}`);
     }
 
     return json(res, message);
