@@ -3,15 +3,15 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start",
+    "start": "node init && expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "build:prod": "eas build --platform android --profile production",
+    "build:prod": "node init && eas build --platform android --profile production",
     "postinstall": "node scripts/patch-appwrite.mjs",
-    "build:dev": "eas build --platform android --profile development"
+    "build:dev": "node init && eas build --platform android --profile development"
   },
   "overrides": {
     "expo-file-system": "^57.0.7"

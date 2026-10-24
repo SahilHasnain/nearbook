@@ -14,14 +14,14 @@ interface ButtonProps extends PressableProps {
 }
 
 const variants = {
-  primary: "bg-amber-600 active:bg-amber-700",
+  primary: "bg-emerald-700 active:bg-emerald-800",
   secondary: "bg-slate-100 active:bg-slate-200",
   ghost: "bg-transparent active:bg-slate-100",
   danger: "bg-red-50 active:bg-red-100",
 } as const;
 
 const textVariants = {
-  primary: "text-slate-900",
+  primary: "text-white",
   secondary: "text-slate-900",
   ghost: "text-slate-900",
   danger: "text-red-600",
@@ -48,7 +48,7 @@ export function Button({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === "primary" ? colors.slate900 : colors.amber800}
+          color={variant === "primary" ? colors.white : colors.amber800}
         />
       ) : (
         <Text className={cn("text-base font-semibold", textVariants[variant])}>
