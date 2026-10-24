@@ -29,6 +29,8 @@ jobs:
     env:
       EXPO_PUBLIC_DATA_MODE: appwrite
       BUILD_TARGET: ${{ inputs.build_target || 'debug-apk' }}
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      ANDROID_HOME: /usr/local/lib/android/sdk
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,9 +46,6 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
 
       - name: Setup Ruby for Fastlane
         if: ${{ env.BUILD_TARGET == 'production' }}
